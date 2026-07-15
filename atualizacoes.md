@@ -20,6 +20,13 @@
 
 ---
 
+## 2026-07-15 — Correção: logo do círculo aparecia minúscula
+- **Arquivos:** `assets/css/styles.css`
+- **O que mudou:** o `.logo-circle` estava com `display:grid` + `padding:15%`, o que fazia a altura
+  da imagem colapsar e a logo aparecer minúscula. Trocado para **flex** (centralização) com a imagem
+  em `width/height:90%` e `overflow:hidden` recortando apenas os cantos brancos vazios do quadrado.
+- **Status:** concluído.
+
 ## 2026-07-15 — Ajustes: nome maiúsculo, olho de senha, círculo da logo e espaçamentos
 - **Arquivos:** `assets/css/styles.css`, `assets/js/utils.js`, `cadastro.js`, `admin.js`,
   `login.js`, `admin.html`.
