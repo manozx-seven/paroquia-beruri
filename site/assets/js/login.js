@@ -3,19 +3,18 @@ import {
   signInWithEmailAndPassword, updatePassword, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { toast, REGRAS_SENHA, validarSenhaForte } from './utils.js';
+import { toast, REGRAS_SENHA, validarSenhaForte, comCarregamento } from './utils.js';
 
 const viewLogin = document.getElementById('viewLogin');
 const viewTroca = document.getElementById('viewTrocarSenha');
-const loading = document.getElementById('loading');
-const loading2 = document.getElementById('loading2');
 const novaSenhaEl = document.getElementById('novaSenha');
 const novaSenha2El = document.getElementById('novaSenha2');
+const btnEntrar = document.getElementById('btnEntrar');
 const btnSalvarSenha = document.getElementById('btnSalvarSenha');
 
-document.getElementById('btnEntrar').addEventListener('click', entrar);
-document.getElementById('senha').addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); });
-btnSalvarSenha.addEventListener('click', salvarSenha);
+btnEntrar.addEventListener('click', () => comCarregamento(btnEntrar, entrar));
+document.getElementById('senha').addEventListener('keydown', e => { if (e.key === 'Enter') comCarregamento(btnEntrar, entrar); });
+btnSalvarSenha.addEventListener('click', () => comCarregamento(btnSalvarSenha, salvarSenha));
 
 // ---- Regras de senha (lista visual + validação ao vivo) ----
 const listaRegras = document.getElementById('regrasSenha');
@@ -46,28 +45,25 @@ async function entrar(){
   const senha = document.getElementById('senha').value;
   if (!email || !senha){ toast('Informe e-mail e senha.', 'warn'); return; }
 
-  loading.classList.add('show');
   try {
     const cred = await signInWithEmailAndPassword(auth, email, senha);
     // confere se é um admin cadastrado
     const snap = await getDoc(doc(db, COL_ADMINS, cred.user.uid));
     if (!snap.exists()){
       await signOut(auth);
-      loading.classList.remove('show');
       toast('Este usuário não tem permissão de administrador.', 'erro', 6000);
       return;
     }
     const adm = snap.data();
-    loading.classList.remove('show');
     if (adm.mustChangePassword){
       // força a troca de senha no primeiro acesso
       viewLogin.classList.add('hidden');
       viewTroca.classList.remove('hidden');
+      viewTroca.classList.add('fade-in');
       return;
     }
     location.href = './admin.html';
   } catch (e){
-    loading.classList.remove('show');
     console.error(e);
     const map = {
       'auth/invalid-credential': 'E-mail ou senha incorretos.',
@@ -87,15 +83,12 @@ async function salvarSenha(){
   if (!ok){ toast('Senha fraca. Falta: ' + faltas.map(f => f.txt.toLowerCase()).join('; '), 'warn', 6000); return; }
   if (s1 !== s2){ toast('As senhas não conferem.', 'warn'); return; }
 
-  loading2.classList.add('show');
   try {
     await updatePassword(auth.currentUser, s1);
     await updateDoc(doc(db, COL_ADMINS, auth.currentUser.uid), { mustChangePassword: false });
-    loading2.classList.remove('show');
     toast('Senha atualizada com sucesso!', 'ok');
     location.href = './admin.html';
   } catch (e){
-    loading2.classList.remove('show');
     console.error(e);
     toast('Erro ao salvar a senha. Faça login novamente e tente de novo.', 'erro', 6000);
   }

@@ -8,7 +8,7 @@ import {
   collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
-  formatarCPF, dataBR, toast, preencherSelect, onlyDigits
+  formatarCPF, dataBR, toast, preencherSelect, onlyDigits, comCarregamento
 } from './utils.js';
 
 let MEU = { uid: null, email: null, role: null };
@@ -34,7 +34,10 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-$('#btnSair').addEventListener('click', async () => { await signOut(auth); location.href = './index.html'; });
+const btnSair = $('#btnSair');
+btnSair.addEventListener('click', () => comCarregamento(btnSair, async () => {
+  await signOut(auth); location.href = './index.html';
+}));
 
 // ---------- Abas ----------
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
@@ -172,18 +175,20 @@ function renderCadastros(){
   });
 
   box.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => abrirEdicao(b.dataset.edit)));
-  box.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => excluirCadastro(b.dataset.del)));
+  box.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => excluirCadastro(b.dataset.del, b)));
 }
 
-async function excluirCadastro(id){
+async function excluirCadastro(id, btn){
   const c = CADASTROS.find(x => x.id === id);
   if (!confirm(`Excluir o cadastro de ${c?.nome || formatarCPF(id)}?`)) return;
-  try {
-    await deleteDoc(doc(db, COL_CADASTROS, id));
-    CADASTROS = CADASTROS.filter(x => x.id !== id);
-    renderCadastros();
-    toast('Cadastro excluído.', 'ok');
-  } catch (e){ console.error(e); toast('Erro ao excluir.', 'erro'); }
+  await comCarregamento(btn, async () => {
+    try {
+      await deleteDoc(doc(db, COL_CADASTROS, id));
+      CADASTROS = CADASTROS.filter(x => x.id !== id);
+      renderCadastros();
+      toast('Cadastro excluído.', 'ok');
+    } catch (e){ console.error(e); toast('Erro ao excluir.', 'erro'); }
+  });
 }
 
 // ---- Modal de edição ----
@@ -236,7 +241,8 @@ function addLinhaPastoral(wrap, p){
   wrap.appendChild(div);
 }
 
-$('#modalSalvar').addEventListener('click', async () => {
+const btnModalSalvar = $('#modalSalvar');
+btnModalSalvar.addEventListener('click', () => comCarregamento(btnModalSalvar, async () => {
   if (!editId) return;
   const pastorais = [...$('#mPastorais').querySelectorAll('.pastoral-bloco')].map(b => ({
     nome: b.querySelector('.mPast').value,
@@ -260,7 +266,7 @@ $('#modalSalvar').addEventListener('click', async () => {
     renderCadastros();
     toast('Cadastro atualizado.', 'ok');
   } catch (e){ console.error(e); toast('Erro ao salvar. Verifique sua permissão.', 'erro'); }
-});
+}));
 
 // ---------- Exportação (Excel / PDF) ----------
 function rotuloSelecao(){
@@ -331,8 +337,9 @@ function exportarPdf(){
   toast(`PDF exportado: ${lista.length} cadastro(s).`, 'ok');
 }
 
-$('#btnExportExcel').addEventListener('click', exportarExcel);
-$('#btnExportPdf').addEventListener('click', exportarPdf);
+const btnExcel = $('#btnExportExcel'), btnPdf = $('#btnExportPdf');
+btnExcel.addEventListener('click', () => comCarregamento(btnExcel, async () => exportarExcel()));
+btnPdf.addEventListener('click', () => comCarregamento(btnPdf, async () => exportarPdf()));
 
 // ---------- Administradores ----------
 async function carregarAdmins(){
@@ -358,20 +365,23 @@ async function carregarAdmins(){
       </div>`;
     box.appendChild(card);
   });
-  box.querySelectorAll('[data-deladm]').forEach(b => b.addEventListener('click', () => excluirAdmin(b.dataset.deladm)));
+  box.querySelectorAll('[data-deladm]').forEach(b => b.addEventListener('click', () => excluirAdmin(b.dataset.deladm, b)));
 }
 
-async function excluirAdmin(uid){
+async function excluirAdmin(uid, btn){
   if (!confirm('Excluir este administrador? (O acesso dele será removido do sistema.)')) return;
-  try {
-    await deleteDoc(doc(db, COL_ADMINS, uid));
-    toast('Administrador removido do sistema.', 'ok', 6000);
-    toast('Obs.: a conta de login continua no Firebase Auth até ser apagada no Console.', 'info', 8000);
-    await carregarAdmins();
-  } catch (e){ console.error(e); toast('Erro ao excluir. Verifique sua permissão.', 'erro'); }
+  await comCarregamento(btn, async () => {
+    try {
+      await deleteDoc(doc(db, COL_ADMINS, uid));
+      toast('Administrador removido do sistema.', 'ok', 6000);
+      toast('Obs.: a conta de login continua no Firebase Auth até ser apagada no Console.', 'info', 8000);
+      await carregarAdmins();
+    } catch (e){ console.error(e); toast('Erro ao excluir. Verifique sua permissão.', 'erro'); }
+  });
 }
 
-$('#btnCriarAdm').addEventListener('click', async () => {
+const btnCriarAdm = $('#btnCriarAdm');
+btnCriarAdm.addEventListener('click', () => comCarregamento(btnCriarAdm, async () => {
   const email = $('#admEmail').value.trim();
   const senha = $('#admSenha').value;
   const role = $('#admRole').value;
@@ -401,4 +411,4 @@ $('#btnCriarAdm').addEventListener('click', async () => {
   } finally {
     try { await deleteApp(secApp); } catch (_){}
   }
-});
+}));

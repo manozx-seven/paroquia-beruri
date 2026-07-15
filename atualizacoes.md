@@ -20,6 +20,31 @@
 
 ---
 
+## 2026-07-15 — Redesign completo + loaders (ldrs) + revisão de bugs
+- **Arquivos:** `site/assets/css/styles.css` (reescrito), `site/assets/js/utils.js`,
+  `site/index.html`, `site/cadastro.html` + `cadastro.js`, `site/verificar.html`,
+  `site/login.html` + `login.js`, `site/admin.html` + `admin.js`.
+- **Design:** novo design system moderno — fonte **Inter**, paleta índigo/violeta com gradientes,
+  fundo com "aurora", cards com sombras suaves, cantos arredondados, **transições/animações fluidas**
+  (entrada de container, fade-in de blocos, hover/press nos botões), toasts estilizados com blur.
+- **Loaders (biblioteca `ldrs`, dot-wave):** helper `comCarregamento(btn, fn)` em `utils.js` que
+  mostra o loader dentro do botão durante a ação e **bloqueia clique duplo** (guarda `data-busy`).
+  Aplicado nos botões de ação: enviar cadastro, buscar (verificar), entrar/salvar senha,
+  criar admin, excluir cadastro/admin, salvar edição, exportar, baixar PDF, sair. Também loader
+  inline ao "Verificando CPF..." e no carregamento inicial do painel. Script ldrs via CDN em cada página.
+- **Mudança de layout:** **Data de Nascimento** movida para logo **abaixo do CPF** (1º campo do
+  bloco liberado após validar o CPF).
+- **Revisão / correções de lógica (vs. `formulario.html` legado):**
+  - Removidas duplicações do legado (`verificarFuncoes` definida 2x e 2 listeners `DOMContentLoaded`).
+  - **Desacoplada** a "Função na Comunidade" da regra "Coordenação/Assessoria só uma vez" — essa regra
+    agora vale só entre as **pastorais** (a função na comunidade é independente).
+  - Novas validações no envio: data de nascimento obrigatória e ao menos uma pastoral/grupo.
+  - PDF do comprovante agora exporta só o card `#comprovante` (antes incluía os botões).
+  - Removidos spinners antigos (`.spinner`) substituídos pelo dot-wave.
+- **Nota:** `formulario.html` (raiz) é a versão **legada** (Google Sites/Apps Script) e está
+  **superada** pelo site em `site/`. Mantido só como referência; pode ser removido quando quiser.
+- **Status:** concluído (pendente teste visual real após deploy/Firebase).
+
 ## 2026-07-15 — Exportação de cadastros (Excel e PDF) no painel
 - **Arquivos:** `site/admin.html`, `site/assets/js/admin.js`
 - **O que mudou:** na aba **Cadastros** foram adicionados os botões **Exportar Excel** e

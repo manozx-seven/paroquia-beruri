@@ -2,7 +2,7 @@ import { db, COL_CADASTROS, CONFIG_DOC } from './firebase.js';
 import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   aplicarMascaraCPF, aplicarMascaraCelular, onlyDigits, cpfValido, formatarCPF,
-  dataBR, toast, preencherSelect, linkWhatsApp
+  dataBR, toast, preencherSelect, linkWhatsApp, comCarregamento
 } from './utils.js';
 
 let LISTAS = { comunidades: [], pastorais: [], funcoes: [] };
@@ -14,7 +14,9 @@ const cpfInfo = document.getElementById('cpfInfo');
 const campos = document.getElementById('camposCadastro');
 const cpfExistente = document.getElementById('cpfExistente');
 const mensagem = document.getElementById('mensagem');
-const loading = document.getElementById('loading');
+const btnEnviar = document.getElementById('btnEnviar');
+
+function setCpfStatus(tipo, html){ cpfInfo.className = 'cpf-status ' + tipo; cpfInfo.innerHTML = html; }
 
 aplicarMascaraCPF(cpfEl);
 aplicarMascaraCelular(document.getElementById('celular'));
@@ -29,7 +31,8 @@ async function init(){
 
   preencherSelect(document.getElementById('comunidade'), LISTAS.comunidades || []);
   preencherSelect(document.getElementById('funcaoComunidade'), LISTAS.funcoes || []);
-  document.getElementById('funcaoComunidade').addEventListener('change', verificarFuncoes);
+  // Obs.: a função na comunidade é independente das funções nas pastorais,
+  // por isso NÃO participa da regra de "Coordenação/Assessoria só uma vez".
   adicionarPastoral();
 }
 
@@ -37,24 +40,24 @@ async function init(){
 let checando = false;
 cpfEl.addEventListener('input', () => {
   liberar(false);
-  cpfInfo.textContent = '';
+  cpfInfo.className = 'cpf-status'; cpfInfo.textContent = '';
   cpfExistente.classList.add('hidden');
   mensagem.textContent = '';
   const cpf = onlyDigits(cpfEl.value);
   if (cpf.length === 11) checarCPF(cpf);
+  else if (cpf.length > 0) setCpfStatus('load', 'Digite os 11 dígitos do CPF...');
 });
 
 async function checarCPF(cpf){
   if (checando) return;
-  if (!cpfValido(cpf)){ cpfInfo.innerHTML = '<span style="color:#b00020">CPF inválido.</span>'; return; }
+  if (!cpfValido(cpf)){ setCpfStatus('err', '✗ CPF inválido.'); return; }
   checando = true;
-  cpfInfo.textContent = 'Verificando CPF...';
+  setCpfStatus('load', '<l-dot-wave size="22" speed="1" color="#6b7280"></l-dot-wave><span>Verificando CPF...</span>');
   try {
     const snap = await getDoc(doc(db, COL_CADASTROS, cpf));
     if (snap.exists()){
-      // Trava TODOS os campos e informa
-      liberar(false);
-      cpfInfo.innerHTML = '<span style="color:#b00020">⚠️ Este CPF já está cadastrado.</span>';
+      liberar(false); // trava TODOS os campos
+      setCpfStatus('err', '⚠️ Este CPF já está cadastrado.');
       toast('CPF já cadastrado! Se não foi você, avise a administração.', 'warn', 6000);
       const d = snap.data();
       const msg = `Olá! Estava tentando me cadastrar como agente de pastoral, mas o CPF `
@@ -62,12 +65,12 @@ async function checarCPF(cpf){
       document.getElementById('btnAvisarAdm').href = linkWhatsApp(msg);
       cpfExistente.classList.remove('hidden');
     } else {
-      cpfInfo.innerHTML = '<span style="color:var(--ok)">✔ CPF válido. Preencha os demais campos.</span>';
+      setCpfStatus('ok', '✓ CPF válido. Preencha os demais campos.');
       liberar(true);
     }
   } catch (e){
     console.error(e);
-    cpfInfo.innerHTML = '<span style="color:#b00020">Erro ao verificar o CPF. Tente novamente.</span>';
+    setCpfStatus('err', '✗ Erro ao verificar o CPF. Tente novamente.');
   } finally { checando = false; }
 }
 
@@ -133,8 +136,12 @@ function verificarPastoraisDuplicadas(){
 }
 
 // ---- Envio ----
-form.addEventListener('submit', async (e) => {
+form.addEventListener('submit', (e) => {
   e.preventDefault();
+  comCarregamento(btnEnviar, enviarCadastro);
+});
+
+async function enviarCadastro(){
   if (!cpfLiberado){ toast('Digite um CPF válido e ainda não cadastrado.', 'warn'); return; }
 
   const fd = new FormData(form);
@@ -142,42 +149,40 @@ form.addEventListener('submit', async (e) => {
   const cpf = onlyDigits(dados.cpf);
 
   if (!cpfValido(cpf)){ toast('CPF inválido.', 'erro'); return; }
+  if (!dados.nascimento){ toast('Informe a data de nascimento.', 'warn'); return; }
   if (!(LISTAS.comunidades || []).includes(dados.comunidade)){ toast('Selecione uma comunidade válida.', 'warn'); return; }
 
   const pastoraisNomes = fd.getAll('pastoral[]');
   const funcoes = fd.getAll('funcao[]');
-  const pastorais = pastoraisNomes.map((nome, i) => ({ nome, funcao: funcoes[i] || '' }))
-    .filter(p => p.nome);
+  const pastorais = pastoraisNomes.map((nome, i) => ({ nome, funcao: funcoes[i] || '' })).filter(p => p.nome);
+  if (!pastorais.length){ toast('Adicione ao menos uma pastoral/grupo.', 'warn'); return; }
 
-  loading.classList.add('show'); mensagem.textContent = '';
+  mensagem.textContent = '';
+  // trava de segurança: recheca duplicidade no envio
+  const ref = doc(db, COL_CADASTROS, cpf);
+  const jaExiste = await getDoc(ref);
+  if (jaExiste.exists()){ toast('Este CPF já está cadastrado.', 'erro'); return; }
+
+  const registro = {
+    cpf,
+    nome: dados.nome.trim(),
+    celular: dados.celular,
+    nascimento: dados.nascimento,
+    comunidade: dados.comunidade,
+    funcaoComunidade: dados.funcaoComunidade,
+    pastorais,
+    criadoEm: serverTimestamp(),
+    atualizadoEm: serverTimestamp()
+  };
   try {
-    // trava de segurança: recheca duplicidade no envio
-    const ref = doc(db, COL_CADASTROS, cpf);
-    const jaExiste = await getDoc(ref);
-    if (jaExiste.exists()){
-      loading.classList.remove('show');
-      toast('Este CPF já está cadastrado.', 'erro'); return;
-    }
-    const registro = {
-      cpf,
-      nome: dados.nome.trim(),
-      celular: dados.celular,
-      nascimento: dados.nascimento,
-      comunidade: dados.comunidade,
-      funcaoComunidade: dados.funcaoComunidade,
-      pastorais,
-      criadoEm: serverTimestamp(),
-      atualizadoEm: serverTimestamp()
-    };
     await setDoc(ref, registro);
+    toast('Cadastro realizado com sucesso!', 'ok');
     mostrarComprovante(registro);
   } catch (err){
     console.error(err);
     toast('Erro ao salvar o cadastro. Tente novamente.', 'erro');
-  } finally {
-    loading.classList.remove('show');
   }
-});
+}
 
 function mostrarComprovante(d){
   const agora = new Date();
@@ -197,12 +202,13 @@ function mostrarComprovante(d){
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-document.getElementById('btnPdf').addEventListener('click', () => {
-  const el = document.getElementById('areaPdf');
+const btnPdf = document.getElementById('btnPdf');
+btnPdf.addEventListener('click', () => comCarregamento(btnPdf, async () => {
+  const el = document.getElementById('comprovante');
   const nome = `comprovante_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`;
   // eslint-disable-next-line no-undef
-  html2pdf().set({
+  await html2pdf().set({
     margin: 10, filename: nome, image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
   }).from(el).save();
-});
+}));

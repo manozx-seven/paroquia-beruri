@@ -4,7 +4,10 @@
   <meta charset="UTF-8" />
   <title>Entrar — Administração</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="./assets/css/styles.css" />
+  <script type="module" src="https://cdn.jsdelivr.net/npm/ldrs/dist/auto/dotWave.js"></script>
 </head>
 <body>
   <div class="container" style="max-width:440px">
@@ -20,8 +23,7 @@
       <label>Senha:
         <input type="password" id="senha" autocomplete="current-password" />
       </label>
-      <button id="btnEntrar">Entrar</button>
-      <div class="loading" id="loading"><span class="spinner"></span><span>Entrando...</span></div>
+      <button id="btnEntrar" class="btn-lg">Entrar</button>
     </div>
 
     <!-- Primeiro acesso: trocar senha -->
@@ -34,8 +36,7 @@
       <label>Confirmar nova senha:
         <input type="password" id="novaSenha2" autocomplete="new-password" />
       </label>
-      <button id="btnSalvarSenha" disabled>Salvar nova senha e entrar</button>
-      <div class="loading" id="loading2"><span class="spinner"></span><span>Salvando...</span></div>
+      <button id="btnSalvarSenha" class="btn-lg" disabled>Salvar nova senha e entrar</button>
     </div>
   </div>
 

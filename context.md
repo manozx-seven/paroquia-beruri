@@ -126,9 +126,17 @@ Paroquiano/Admin → site estático (Netlify, pasta site/)
 - `admin.html` + `assets/js/admin.js` — painel (abas Cadastros, Configurações, Administradores).
   Aba Cadastros tem **exportação Excel/PDF** (SheetJS + jsPDF/autotable via CDN), respeitando o
   filtro de comunidade/busca (todas ou por comunidade).
-- `assets/js/firebase.js` — init + config (PLACEHOLDER a preencher com as chaves do projeto).
-- `assets/js/utils.js` — máscaras (CPF/celular), validação de CPF, toast, selects, WhatsApp.
-- `assets/css/styles.css` — estilo compartilhado.
+- `assets/js/firebase.js` — init + config (já com as chaves do projeto paroquia-beruri).
+- `assets/js/utils.js` — máscaras (CPF/celular), validação de CPF, toast, selects, WhatsApp,
+  **`comCarregamento(btn, fn)`** (loader `ldrs` no botão + bloqueio de clique duplo) e `REGRAS_SENHA`.
+- `assets/css/styles.css` — **design system** (fonte Inter, gradientes índigo/violeta, sombras,
+  transições/animações, toasts). Reescrito no redesign de 2026-07-15.
+
+### Design / UX
+- Visual moderno com transições fluidas; **loaders `ldrs` (dot-wave)** carregados via CDN em cada
+  página (`https://cdn.jsdelivr.net/npm/ldrs/dist/auto/dotWave.js`).
+- Todo botão de ação usa `comCarregamento()` → mostra loader e impede duplo clique/duas ações.
+- Ordem dos campos do formulário: **CPF → Data de Nascimento → Nome → ...** (nascimento logo após o CPF).
 - Fora de `site/`: `netlify.toml` (publica `site/`), `firestore.rules` (regras), `SETUP-FIREBASE.md` (guia).
 
 ### Modelo de dados no Firestore

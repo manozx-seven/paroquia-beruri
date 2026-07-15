@@ -85,6 +85,32 @@ export function linkWhatsApp(texto){
   return `https://wa.me/${WHATSAPP_PAROCO}?text=${encodeURIComponent(texto)}`;
 }
 
+// ---- Carregamento em botões de ação (com bloqueio de clique duplo) ----
+// Uso: btn.addEventListener('click', () => comCarregamento(btn, async () => { ...ação... }))
+export async function comCarregamento(btn, fn){
+  if (!btn || btn.dataset.busy === '1') return;              // já em execução -> ignora clique duplo
+  btn.dataset.busy = '1';
+  btn.classList.add('is-loading');
+  btn.setAttribute('aria-busy', 'true');
+  const originalHTML = btn.innerHTML;
+  const w = btn.offsetWidth, h = btn.offsetHeight;
+  btn.style.minWidth = w + 'px';
+  btn.style.minHeight = h + 'px';
+  const escuro = btn.classList.contains('btn-outline') || btn.classList.contains('btn-ghost') || btn.classList.contains('tab');
+  const cor = escuro ? '#4f46e5' : '#ffffff';
+  btn.innerHTML = `<span class="btn-loader"><l-dot-wave size="30" speed="1" color="${cor}"></l-dot-wave></span>`;
+  try {
+    return await fn();
+  } finally {
+    btn.dataset.busy = '';
+    btn.classList.remove('is-loading');
+    btn.removeAttribute('aria-busy');
+    btn.innerHTML = originalHTML;
+    btn.style.minWidth = '';
+    btn.style.minHeight = '';
+  }
+}
+
 // ---- Regras de senha forte ----
 export const REGRAS_SENHA = [
   { id: 'len',  txt: 'Pelo menos 8 caracteres',           teste: s => s.length >= 8 },
