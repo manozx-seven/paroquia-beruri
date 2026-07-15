@@ -2,6 +2,10 @@
 Agentes de Pastoral - Beruri - Oficial - planilha de dados/
 *.xlsx
 
+# Imagens soltas de WhatsApp na raiz (a logo já está copiada em site/assets/img/)
+/WhatsApp Image*.jpeg
+/WhatsApp Image*.jpg
+
 # Sistema operacional
 Thumbs.db
 Desktop.ini

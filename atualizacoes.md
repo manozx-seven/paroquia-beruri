@@ -20,6 +20,19 @@
 
 ---
 
+## 2026-07-15 — Logo oficial, favicon e botão de admin flutuante
+- **Arquivos:** `site/assets/img/` (logo.png/jpeg, favicon-32/64.png, apple-touch-icon.png),
+  `site/index.html`, `site/login.html`, `styles.css`, favicon em cadastro/verificar/admin, `.gitignore`.
+- **Logo oficial da paróquia** (cruz azul/dourada com N. S. de Nazaré) adicionada no topo da **tela
+  inicial** e do **login**. Gerados a partir dela: **favicon** (32/64 px) e apple-touch-icon (180 px),
+  aplicados em todas as páginas (ícone na aba do navegador).
+- **Botão "Entrar como administrador"** (era "Administrador / Dev"): texto simplificado e **movido
+  para fora do card**, flutuando discretamente **abaixo** do quadrado inicial (`.btn-admin-float`).
+  No card ficam só os dois botões principais (Fazer cadastro / Verificar cadastro).
+- Subtítulo do login ajustado para "Acesso restrito à administração".
+- `.gitignore`: ignora imagens soltas de WhatsApp na raiz (a logo usada fica em `site/assets/img/`).
+- **Status:** concluído.
+
 ## 2026-07-15 — Refinamento visual (sério/sofisticado), ícones SVG e responsividade total
 - **Arquivos:** `site/assets/css/styles.css` (reescrito), `site/assets/js/utils.js`, `admin.js`, `cadastro.js`,
   e todas as páginas (`index/cadastro/verificar/login/admin.html`).
