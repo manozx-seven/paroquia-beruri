@@ -1,0 +1,12 @@
+# Dados pessoais reais (CPF, nome, celular, nascimento) — NUNCA versionar/publicar
+Agentes de Pastoral - Beruri - Oficial - planilha de dados/
+*.xlsx
+
+# Sistema operacional
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editores
+.vscode/
+.idea/

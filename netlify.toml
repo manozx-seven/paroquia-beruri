@@ -1,0 +1,14 @@
+# Configuração de deploy no Netlify.
+# A pasta publicada é "site" (o site novo em Firebase). Os arquivos antigos
+# (formulario.html, planilha .xlsx) ficam fora dela e NÃO são publicados.
+[build]
+  publish = "site"
+  command = ""
+
+# Cabeçalhos de segurança básicos
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

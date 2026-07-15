@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function estaLogado() {
+      return request.auth != null;
+    }
+    // qualquer administrador (adm ou dev): existe doc em /admins/{uid}
+    function ehAdmin() {
+      return estaLogado() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    // desenvolvedor (superadmin)
+    function ehDev() {
+      return ehAdmin() &&
+        get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'dev';
+    }
+
+    // ---- Cadastros dos agentes ----
+    match /cadastros/{cpf} {
+      // get: público (necessário para checar CPF duplicado e para "verificar meu cadastro").
+      //      A conferência por Data de Nascimento é feita no app.
+      allow get: if true;
+      // listar TODOS os cadastros: só administradores (painel).
+      allow list: if ehAdmin();
+      // criar: público (cadastro dos paroquianos). Regra de "create" só vale quando
+      //        o documento ainda não existe, então não sobrescreve um CPF já cadastrado.
+      allow create: if true;
+      // editar / excluir: só administradores.
+      allow update, delete: if ehAdmin();
+    }
+
+    // ---- Listas (comunidades, pastorais, funções) ----
+    match /config/{doc} {
+      allow read: if true;              // o formulário precisa ler as listas
+      allow write: if ehAdmin();        // só admin edita nas Configurações
+    }
+
+    // ---- Administradores ----
+    match /admins/{uid} {
+      // ler o próprio doc (após login) ou, se for admin, ler qualquer um.
+      allow get: if estaLogado() && (request.auth.uid == uid || ehAdmin());
+      allow list: if ehAdmin();
+      // criar novos admins: qualquer admin pode.
+      allow create: if ehAdmin();
+      // atualizar: o próprio (ex.: baixar flag mustChangePassword) ou um admin.
+      allow update: if estaLogado() && (request.auth.uid == uid || ehAdmin());
+      // excluir: dev remove qualquer um; adm só remove quem tem role 'adm'.
+      allow delete: if ehDev() || (ehAdmin() && resource.data.role == 'adm');
+    }
+  }
+}

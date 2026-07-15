@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cadastro de Agentes de Pastoral</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --pri: #5c6bc0;
+      --pri-dark: #3f51b5;
+      --err: #d9534f;
+      --bg: #f1f3f6;
+      --card: #ffffff;
+    }
+    body{font-family:'Segoe UI',sans-serif;background:var(--bg);margin:0;padding:40px}
+    .container{background:var(--card);padding:30px;border-radius:12px;box-shadow:0 5px 20px rgba(0,0,0,.1);max-width:520px;margin:auto}
+    h2{text-align:center;color:#333;margin-bottom:20px}
+    label{font-weight:700;display:block;margin-top:15px;color:#555}
+    input,select,button{width:100%;padding:10px;margin-top:5px;border:1px solid #ccc;border-radius:6px;font-size:14px;box-sizing:border-box}
+    input:focus,select:focus{border-color:var(--pri);outline:none;box-shadow:0 0 0 2px #e8eaf6}
+
+    /* seta estilizada */
+    select{
+      appearance:none;-webkit-appearance:none;-moz-appearance:none;
+      background:#fff url("data:image/svg+xml,%3Csvg fill='none' stroke='%235c6bc0' stroke-width='3' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center/18px 18px;
+      padding-right:36px;cursor:pointer;
+    }
+
+    button{background:var(--pri);color:#fff;font-weight:700;border:none;cursor:pointer;margin-top:20px;transition:background .3s}
+    button:hover{background:var(--pri-dark)}
+    #editarBtn{background:var(--err);display:none}
+    #editarBtn:hover{background:#c9302c}
+
+    .loading{display:none;justify-content:center;align-items:center;gap:10px;margin-top:15px}
+    .loading.show{display:flex}
+    .spinner{width:20px;height:20px;border:3px solid #ccc;border-top:3px solid var(--pri);border-radius:50%;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .mensagem{text-align:center;margin-top:15px;font-weight:700}
+    .mensagem.ok{color:green}.mensagem.erro{color:#b00020}
+    #tituloPastorais{text-align:center;background:#e8eaf6;padding:12px;border-radius:8px;font-size:18px;color:var(--pri-dark);margin-top:30px}
+
+    /* bloco pastoral */
+    .pastoral-bloco{margin-bottom:15px;padding:10px;border:1px solid #ccc;border-radius:8px;background:#f9f9f9}
+    .actions-row{display:flex;gap:12px;flex-wrap:wrap}
+    @media (max-width:600px){body{padding:20px}.container{padding:24px}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="formularioContainer">
+      <h2>Cadastro de Agentes de Pastoral</h2>
+
+      <form id="form" autocomplete="off">
+        <label>Nome Completo:
+          <input type="text" name="nome" required />
+        </label>
+
+        <label>CPF:
+          <input type="text" name="cpf" id="cpf" maxlength="14" required placeholder="000.000.000-00" />
+        </label>
+
+        <label>Comunidade:
+          <select name="comunidade" id="comunidade" required></select>
+        </label>
+
+        <label>Função na Comunidade:
+          <select name="funcaoComunidade" id="funcaoComunidade" class="funcaoSelect" required>
+            <option disabled selected>Selecione</option>
+            <option value="Coordenação">Coordenação</option>
+            <option value="Membro">Membro</option>
+          </select>
+        </label>
+
+        <h3 id="tituloPastorais">Selecione as Pastorais ou Grupos que você participa</h3>
+        <label>Pastorais / Grupos e Funções:</label>
+        <div id="blocoPastorais"></div>
+        <button type="button" id="btnAddPastoral">+ Adicionar Pastoral / Grupo</button>
+
+        <label>Celular:
+          <input type="text" name="celular" id="celular" placeholder="(99) 99999-9999" required />
+        </label>
+
+        <label>Data de Nascimento:
+          <input type="date" name="nascimento" id="nascimento" required />
+        </label>
+
+        <button type="submit">Enviar</button>
+        <div class="loading" id="loading">
+          <div class="spinner"></div><span>Enviando...</span>
+        </div>
+      </form>
+    </div>
+
+    <div id="mensagem" class="mensagem"></div>
+    <button id="editarBtn">Editar informações cadastradas</button>
+  </div>
+
+  <!-- Área do Comprovante (PDF) -->
+  <div id="areaPdf" style="display:none;">
+    <h2 style="text-align:center;margin-top:0;">Cadastro de Agentes de Pastoral</h2>
+    <div id="comprovante" style="margin-top:30px;padding:24px;border:2px solid #ccc;border-radius:12px;background:#fff;color:#000;max-width:600px;margin-inline:auto;">
+      <h3 style="color:green;text-align:center;">✅ Cadastro realizado com sucesso!</h3>
+      <p><strong>Nome:</strong> <span id="compNome"></span></p>
+      <p><strong>CPF:</strong> <span id="compCPF"></span></p>
+      <p><strong>Celular:</strong> <span id="compCelular"></span></p>
+      <p><strong>Data de Nascimento:</strong> <span id="compNascimento"></span></p>
+      <p><strong>Comunidade:</strong> <span id="compComunidade"></span></p>
+      <p><strong>Função na Comunidade:</strong> <span id="compFuncaoComunidade"></span></p>
+      <p><strong>Pastoral / Grupo:</strong> <span id="compPastoral"></span></p>
+      <p><strong>Data e Hora:</strong> <span id="compDataHora"></span></p>
+
+      <div class="actions-row" style="margin-top:12px;">
+        <button onclick="baixarComprovantePDF()" style="background:#0066cc;padding:10px 20px;border:none;color:#fff;border-radius:6px;font-weight:500;cursor:pointer;">⬇️ Baixar Comprovante</button>
+        <button onclick="novoCadastro()" style="background:#b30000;padding:10px 20px;border:none;color:#fff;border-radius:6px;font-weight:500;cursor:pointer;">🔁 Realizar novo cadastro</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script>
+    /************* CONFIG *************/
+    // Troque pela URL do seu Web App (termina com /exec)
+    const API_BASE = 'https://script.google.com/macros/s/AKfycbxeztm3WymcrpxpMF736xd_3rQJYQTucDcbplo6p75_f88L3JiFr4dsHPuS8gpP7c7w/exec';
+
+    // Listas fixas (edite à vontade)
+    const COMUNIDADES = [
+      'Matriz',
+      'Divino Espírito Santo',
+      'São José',
+      'Bom Pastor',
+      'São Francisco',
+      'Santa Luzia',
+      'Santo Antônio',
+      'São Pedro',
+      'São Raimundo'
+    ];
+    const PASTORAIS = [
+      'Batismo',
+      'COMIPA',
+      'Pastoral da Catequese',
+      'Cerimoniários',
+      'Coroinhas',
+      'Cáritas',
+      'Pastoral do Dízimo',
+      'Grupo Esperança Viva',
+      'Infância Missionária',
+      'Pastoral da Liturgia',
+      'Ministros Extraordinários',
+      'Pastoral Esperança',
+      'Pastoral Familiar',
+      'Pastoral da Criança',
+      'Pastoral da Juventude',
+      'Pastoral da Pessoa Idosa'
+    ];
+    const FUNCOES = ['Coordenação','Assessoria','Membro'];
+
+    /************* JSONP helper *************/
+    function jsonp(url){
+  return new Promise((resolve, reject)=>{
+    const cb = 'cb_' + Math.random().toString(36).slice(2);
+    const s  = document.createElement('script');
+    window[cb] = (data)=>{ resolve(data); cleanup(); };
+
+    function cleanup(){
+      delete window[cb];
+      if (s && s.parentNode) s.parentNode.removeChild(s);
+    }
+
+    s.async = true;
+    s.defer = true;
+    s.onerror = ()=>{ cleanup(); reject(new Error('Erro JSONP')); };
+
+    const sep = url.includes('?') ? '&' : '?';
+    // cache-buster para evitar resposta antiga no mobile
+    s.src = `${url}${sep}callback=${cb}&_=${Date.now()}`;
+
+    document.head.appendChild(s);
+  });
+}
+
+    /************* UI helpers *************/
+    function option(tag){ const o = document.createElement('option'); o.value = tag; o.textContent = tag; return o; }
+    function preencherSelectOrdenado(selectEl, itens){
+  selectEl.innerHTML = '';
+  const first = document.createElement('option');
+  first.value = '';
+  first.textContent = 'Selecione';
+  first.disabled = true;
+  first.selected = true;         // selecionado agora
+  first.defaultSelected = true;  // e default ao dar reset()
+  selectEl.appendChild(first);
+
+  itens.slice().sort((a,b)=>a.localeCompare(b,'pt-BR')).forEach(v=>{
+    const o = document.createElement('option');
+    o.value = v;
+    o.textContent = v;
+    o.selected = false;
+    o.defaultSelected = false;
+    selectEl.appendChild(o);
+  });
+}
+
+    /************* Máscaras e validações *************/
+    const cpfInput = document.getElementById('cpf');
+    cpfInput.addEventListener('input', () => {
+      let v = cpfInput.value.replace(/\D/g,'');
+      if (v.length <= 11) cpfInput.value = v.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/,'$1.$2.$3-$4');
+    });
+
+    const celularInput = document.getElementById('celular');
+    celularInput.addEventListener('input', ()=>{
+      let v = celularInput.value.replace(/\D/g,'');
+      if (v.length>11) v=v.slice(0,11);
+      celularInput.value = v.replace(/(\d{0,2})(\d{0,5})(\d{0,4})/, (m,p1,p2,p3)=>{
+        if (p3) return `(${p1}) ${p2}-${p3}`;
+        if (p2) return `(${p1}) ${p2}`;
+        if (p1) return `(${p1}`;
+        return '';
+      });
+    });
+
+    function cpfValido(cpf){
+      cpf = cpf.replace(/\D/g,'');
+      if (!cpf || cpf.length!==11 || /^(\d)\1+$/.test(cpf)) return false;
+      let soma=0, resto;
+      for (let i=1;i<=9;i++) soma+=parseInt(cpf[i-1])*(11-i);
+      resto=(soma*10)%11; if (resto===10||resto===11) resto=0;
+      if (resto!==parseInt(cpf[9])) return false;
+      soma=0;
+      for (let i=1;i<=10;i++) soma+=parseInt(cpf[i-1])*(12-i);
+      resto=(soma*10)%11; if (resto===10||resto===11) resto=0;
+      return resto===parseInt(cpf[10]);
+    }
+
+    /************* Pastorais: adicionar/remover + regras *************/
+    function adicionarPastoral(){
+      const container = document.getElementById('blocoPastorais');
+      const div = document.createElement('div');
+      div.className = 'pastoral-bloco';
+
+      const selPastoral = document.createElement('select');
+      selPastoral.name = 'pastoral[]'; selPastoral.className = 'pastoralSelect'; selPastoral.required = true;
+
+      const selFuncao = document.createElement('select');
+      selFuncao.name = 'funcao[]'; selFuncao.className = 'funcaoSelect'; selFuncao.required = true;
+
+      const btnRemover = document.createElement('button');
+      btnRemover.type = 'button'; btnRemover.textContent = 'Remover';
+      btnRemover.style.cssText = 'margin-top:10px;background:#a00;color:#fff;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;';
+      btnRemover.addEventListener('click', ()=>{ div.remove(); verificarFuncoes(); verificarPastoraisDuplicadas(); });
+
+      const lbl1 = document.createElement('label'); lbl1.textContent = 'Pastoral / Grupo:';
+      const lbl2 = document.createElement('label'); lbl2.textContent = 'Função:';
+
+      div.appendChild(lbl1);  div.appendChild(selPastoral);
+      div.appendChild(lbl2);  div.appendChild(selFuncao);
+      div.appendChild(btnRemover);
+
+      container.appendChild(div);
+
+      preencherSelectOrdenado(selPastoral, PASTORAIS);
+      preencherSelectOrdenado(selFuncao, FUNCOES);
+
+      selPastoral.addEventListener('change', verificarPastoraisDuplicadas);
+      selFuncao.addEventListener('change', verificarFuncoes);
+
+      verificarFuncoes(); verificarPastoraisDuplicadas();
+    }
+
+    function verificarFuncoes(){
+      const todas = document.querySelectorAll('.funcaoSelect');
+      let coord=false, assess=false;
+      todas.forEach(s=>{ if (s.value==='Coordenação') coord=true; if (s.value==='Assessoria') assess=true; });
+      todas.forEach(s=>{
+        for (let i=0;i<s.options.length;i++){
+          const o = s.options[i];
+          if (o.value==='Coordenação') o.disabled = coord && s.value!=='Coordenação';
+          if (o.value==='Assessoria') o.disabled = assess && s.value!=='Assessoria';
+        }
+      });
+    }
+
+    function verificarPastoraisDuplicadas(){
+      const selects = document.querySelectorAll('.pastoralSelect');
+      const valores = [];
+      selects.forEach(s=>{ if (s.value) valores.push(s.value); });
+      selects.forEach(s=>{
+        const atual = s.value;
+        for (let i=0;i<s.options.length;i++){
+          const o = s.options[i];
+          if (o.value===atual){ o.disabled=false; }
+          else if (valores.includes(o.value)){ o.disabled=true; }
+          else { o.disabled=false; }
+        }
+      });
+    }
+
+    /************* Comprovante *************/
+    function mostrarComprovante(dados){
+      const agora = new Date();
+      const dataHora = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR');
+
+      document.getElementById('formularioContainer').style.display = 'none';
+      document.getElementById('areaPdf').style.display = 'block';
+      document.getElementById('comprovante').style.display = 'block';
+
+      document.getElementById('compNome').textContent = dados.nome;
+      document.getElementById('compCPF').textContent = dados.cpf;
+      document.getElementById('compCelular').textContent = dados.celular;
+      document.getElementById('compNascimento').textContent = dados.nascimento;
+      document.getElementById('compComunidade').textContent = dados.comunidade;
+      document.getElementById('compFuncaoComunidade').textContent = dados.funcaoComunidade;
+
+      const pastorais = [...document.querySelectorAll('select[name="pastoral[]"]')].map(p=>p.value);
+      const funcoes   = [...document.querySelectorAll('select[name="funcao[]"]')].map(f=>f.value);
+      const combinado = pastorais.map((p,i)=>`${p} (${funcoes[i]||''})`);
+      document.getElementById('compPastoral').textContent = combinado.join(', ');
+      document.getElementById('compDataHora').textContent = dataHora;
+
+      document.getElementById('loading').classList.remove('show');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function baixarComprovantePDF(){
+      const el = document.getElementById('areaPdf');
+      const nome = `comprovante_${new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')}.pdf`;
+      html2pdf().set({
+        margin:10, filename:nome, image:{type:'jpeg',quality:0.98},
+        html2canvas:{scale:2}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+      }).from(el).save();
+    }
+
+    function novoCadastro(){
+  // volta para o formulário
+  document.getElementById('formularioContainer').style.display = 'block';
+  document.getElementById('comprovante').style.display = 'none';
+  document.getElementById('areaPdf').style.display = 'none';
+
+  // limpa o formulário
+  const form = document.getElementById('form');
+  form.reset();
+
+  // força o placeholder "Selecione" na Comunidade
+  const selCom = document.getElementById('comunidade');
+  selCom.selectedIndex = 0;      // ou: selCom.value = '';
+
+  // re-aplica a regra de Coordenação/Assessoria
+  verificarFuncoes();
+
+  // limpa mensagens e blocos dinâmicos
+  document.getElementById('mensagem').textContent = '';
+  document.getElementById('blocoPastorais').innerHTML = '';
+  document.getElementById('loading').classList.remove('show');
+
+  // adiciona um bloco vazio de Pastoral
+  adicionarPastoral();
+
+  // sobe a tela
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+    /************* Submissão *************/
+    const form = document.getElementById('form');
+    const mensagem = document.getElementById('mensagem');
+    const editarBtn = document.getElementById('editarBtn');
+    const loading = document.getElementById('loading');
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const fd = new FormData(form);
+      const dados = Object.fromEntries(fd.entries());
+      dados.pastoral = fd.getAll('pastoral[]');
+      dados.funcao   = fd.getAll('funcao[]');
+
+      const cpfLimpo = (dados.cpf||'').replace(/\D/g,'');
+
+      if (!cpfValido(cpfLimpo)){
+        mensagem.className = 'mensagem erro';
+        mensagem.textContent = '⚠️ CPF inválido!';
+        return;
+      }
+      if (!COMUNIDADES.includes(dados.comunidade)){
+        mensagem.className = 'mensagem erro';
+        mensagem.textContent = '⚠️ Comunidade não está na lista!';
+        return;
+      }
+
+      loading.classList.add('show');
+      mensagem.textContent = '';
+      editarBtn.style.display = 'none';
+
+      try{
+        const res = await callApi(`action=verificarCpfExistenteDetalhado&cpf=${encodeURIComponent(cpfLimpo)}`);
+        if (res && res.existe){
+          mensagem.className = 'mensagem erro';
+          mensagem.innerHTML = `⚠️ CPF já cadastrado na comunidade <strong>"${res.comunidade}"</strong>, com a função <strong>"${res.funcaoComunidade}"</strong>.<br>
+            Pastoral / Grupo(s): <strong>${(res.pastorais||[]).map(p=>`${p.nome} (${p.funcao})`).join(', ')}</strong>.<br>
+            <span style="color:red;"><strong>Se desejar trocar alguma informação, clique no botão abaixo:</strong></span>`;
+          editarBtn.style.display = 'block';
+          loading.classList.remove('show');
+          return;
+        }
+      }catch(err){
+        console.error(err);
+        mensagem.className = 'mensagem erro';
+        mensagem.textContent = 'Erro ao verificar CPF. Tente novamente.';
+        loading.classList.remove('show');
+        return;
+      }
+
+      try{
+        const saveRes = await callApi(`action=salvarCadastro&payload=${encodeURIComponent(JSON.stringify(dados))}`);
+        if (saveRes && saveRes.ok){
+          mensagem.className = 'mensagem ok';
+          mensagem.textContent = '✅ Cadastro realizado com sucesso!';
+          mostrarComprovante(dados);
+          
+        }else{
+          throw new Error(saveRes && saveRes.error || 'Falha ao salvar.');
+        }
+      }catch(err){
+        console.error(err);
+        mensagem.className = 'mensagem erro';
+        mensagem.textContent = 'Erro ao salvar o cadastro. Tente novamente.';
+      }finally{
+        loading.classList.remove('show');
+      }
+    });
+
+    document.getElementById('editarBtn').addEventListener('click', async ()=>{
+  const cpf = document.getElementById('cpf').value.replace(/\D/g,'');
+  const mensagem = document.getElementById('mensagem');
+  const loading  = document.getElementById('loading');
+  const form     = document.getElementById('form');
+
+  mensagem.textContent = '';
+  loading.classList.add('show');
+
+  try{
+    const out = await callApi(`action=removerCadastroPorCpf&cpf=${encodeURIComponent(cpf)}`);
+    if (out && out.ok){
+      mensagem.className = 'mensagem ok';
+      mensagem.textContent = '✏️ Cadastro anterior removido. Insira as novas informações.';
+
+      // limpa o formulário
+      form.reset();
+
+      // força o "Selecione" na Comunidade
+      const selCom = document.getElementById('comunidade');
+      selCom.value = '';          // <- garante placeholder
+      selCom.selectedIndex = 0;   // <- redundante, mas seguro
+
+      // re-aplica regras de Coordenação/Assessoria
+      verificarFuncoes();
+
+      // esconde botão editar e recria blocos dinâmicos
+      document.getElementById('editarBtn').style.display = 'none';
+      document.getElementById('blocoPastorais').innerHTML = '';
+      adicionarPastoral();
+
+      // foca no primeiro campo (opcional)
+      document.querySelector('input[name="nome"]').focus();
+    }else{
+      mensagem.className = 'mensagem erro';
+      mensagem.textContent = 'Não foi possível remover o cadastro anterior.';
+    }
+  }catch(e){
+    mensagem.className = 'mensagem erro';
+    mensagem.textContent = 'Erro ao remover cadastro.';
+  }finally{
+    loading.classList.remove('show');
+  }
+});
+    /************* Boot *************/
+    document.addEventListener('DOMContentLoaded', ()=>{
+      // Comunidades ordenadas
+      preencherSelectOrdenado(document.getElementById('comunidade'), COMUNIDADES);
+      // adiciona 1 bloco de pastoral vazio
+      adicionarPastoral();
+      // seta scroll top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Botão de adicionar
+    document.getElementById('btnAddPastoral').addEventListener('click', adicionarPastoral);
+
+    function verificarFuncoes(){
+  const todas = document.querySelectorAll('.funcaoSelect');
+
+  let coordSelecionado = false;
+  let assessoriaSelecionado = false;
+
+  // 1) Detecta se alguém já escolheu Coordenação/Assessoria
+  todas.forEach(select => {
+    const v = select.value;
+    if (v === 'Coordenação') coordSelecionado = true;
+    if (v === 'Assessoria')  assessoriaSelecionado = true;
+  });
+
+  // 2) Habilita/desabilita opções nos demais selects
+  todas.forEach(select => {
+    for (let i = 0; i < select.options.length; i++) {
+      const opt = select.options[i];
+
+      if (opt.value === 'Coordenação') {
+        opt.disabled = coordSelecionado && select.value !== 'Coordenação';
+      }
+      if (opt.value === 'Assessoria') {
+        opt.disabled = assessoriaSelecionado && select.value !== 'Assessoria';
+      }
+    }
+  });
+}
+
+// 1) chama ao carregar a página
+document.addEventListener('DOMContentLoaded', () => {
+  verificarFuncoes(); // já aplica as regras inicialmente
+});
+
+// 2) chama quando mudar a Função na Comunidade
+document.getElementById('funcaoComunidade')
+  .addEventListener('change', verificarFuncoes);
+
+
+  async function callApi(queryString){
+  const base = API_BASE + (API_BASE.includes('?') ? '&' : '?') + queryString;
+  const url  = `${base}&_=${Date.now()}`; // cache-buster também no fetch
+
+  try {
+    const r = await fetch(url, { mode: 'cors', cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } catch (err) {
+    // fallback para JSONP quando o Sites mobile bloquear <script> externo
+    return await jsonp(base);
+  }
+}
+  </script>
+</body>
+</html>

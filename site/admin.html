@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Painel — Administração</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./assets/css/styles.css" />
+</head>
+<body>
+  <div class="container wide">
+    <div class="topbar">
+      <h2 style="margin:0;text-align:left">Painel de Administração</h2>
+      <div>
+        <span id="quemSou" class="muted"></span>
+        <button id="btnSair" class="btn-danger btn-sm" style="margin-left:10px">Sair</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="cadastros">Cadastros</button>
+      <button class="tab" data-tab="config">Configurações</button>
+      <button class="tab" data-tab="admins">Administradores</button>
+    </div>
+
+    <div id="carregando" class="loading show"><span class="spinner"></span><span>Carregando...</span></div>
+
+    <!-- ABA CADASTROS -->
+    <section id="tab-cadastros" class="tabpane hidden">
+      <div class="row">
+        <input type="text" id="filtro" placeholder="Buscar por nome, CPF ou comunidade..." />
+        <select id="filtroComunidade" style="max-width:240px"></select>
+      </div>
+      <p class="muted" id="contadorCadastros"></p>
+      <div id="listaCadastros"></div>
+    </section>
+
+    <!-- ABA CONFIGURAÇÕES -->
+    <section id="tab-config" class="tabpane hidden">
+      <p class="muted">Estes itens aparecem no formulário de cadastro. Alterações valem para novos cadastros.</p>
+      <div class="row" style="align-items:flex-start">
+        <div class="card" style="flex:1">
+          <h4>Comunidades</h4>
+          <div class="chip-list" id="listaComunidades"></div>
+          <div class="row mt"><input type="text" id="novaComunidade" placeholder="Nova comunidade" />
+            <button class="btn-sm" data-add="comunidades">Adicionar</button></div>
+        </div>
+        <div class="card" style="flex:1">
+          <h4>Pastorais / Grupos</h4>
+          <div class="chip-list" id="listaPastorais"></div>
+          <div class="row mt"><input type="text" id="novaPastoral" placeholder="Nova pastoral/grupo" />
+            <button class="btn-sm" data-add="pastorais">Adicionar</button></div>
+        </div>
+        <div class="card" style="flex:1">
+          <h4>Funções</h4>
+          <div class="chip-list" id="listaFuncoes"></div>
+          <div class="row mt"><input type="text" id="novaFuncao" placeholder="Nova função" />
+            <button class="btn-sm" data-add="funcoes">Adicionar</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA ADMINISTRADORES -->
+    <section id="tab-admins" class="tabpane hidden">
+      <div class="card">
+        <h4>Cadastrar novo administrador</h4>
+        <div class="row">
+          <input type="email" id="admEmail" placeholder="E-mail" />
+          <input type="text" id="admSenha" placeholder="Senha provisória (mín. 6)" />
+          <select id="admRole" style="max-width:180px">
+            <option value="adm">Administrador</option>
+            <option value="dev">Desenvolvedor</option>
+          </select>
+        </div>
+        <button id="btnCriarAdm" class="btn-sm">Criar administrador</button>
+        <p class="muted">No primeiro acesso, o sistema pedirá que ele cadastre uma nova senha.</p>
+      </div>
+      <div id="listaAdmins"></div>
+    </section>
+  </div>
+
+  <!-- Modal edição de cadastro -->
+  <div id="modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:5000;display:flex;align-items:flex-start;justify-content:center;padding:24px;overflow:auto">
+    <div class="container" style="max-width:600px;margin:0">
+      <h3 id="modalTitulo">Editar cadastro</h3>
+      <div id="modalCorpo"></div>
+      <div class="row mt">
+        <button class="btn-ghost" id="modalCancelar">Cancelar</button>
+        <button id="modalSalvar">Salvar alterações</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./assets/js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Entrar — Administração</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./assets/css/styles.css" />
+</head>
+<body>
+  <div class="container" style="max-width:440px">
+    <a class="back" href="./index.html">← Voltar</a>
+    <h2>Área da Administração</h2>
+
+    <!-- Login -->
+    <div id="viewLogin">
+      <p class="muted center">Acesso para Administrador e Desenvolvedor.</p>
+      <label>E-mail:
+        <input type="email" id="email" autocomplete="username" />
+      </label>
+      <label>Senha:
+        <input type="password" id="senha" autocomplete="current-password" />
+      </label>
+      <button id="btnEntrar">Entrar</button>
+      <div class="loading" id="loading"><span class="spinner"></span><span>Entrando...</span></div>
+    </div>
+
+    <!-- Primeiro acesso: trocar senha -->
+    <div id="viewTrocarSenha" class="hidden">
+      <div class="intro">🔑 Primeiro acesso detectado. Por segurança, cadastre uma nova senha da sua escolha.</div>
+      <label>Nova senha:
+        <input type="password" id="novaSenha" autocomplete="new-password" />
+      </label>
+      <ul id="regrasSenha" class="regras"></ul>
+      <label>Confirmar nova senha:
+        <input type="password" id="novaSenha2" autocomplete="new-password" />
+      </label>
+      <button id="btnSalvarSenha" disabled>Salvar nova senha e entrar</button>
+      <div class="loading" id="loading2"><span class="spinner"></span><span>Salvando...</span></div>
+    </div>
+  </div>
+
+  <script type="module" src="./assets/js/login.js"></script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fazer meu cadastro — Agentes de Pastoral</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./assets/css/styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div id="formularioContainer">
+      <a class="back" href="./index.html">← Voltar</a>
+      <h2>Cadastro de Agentes de Pastoral</h2>
+
+      <form id="form" autocomplete="off">
+        <!-- CPF sempre primeiro -->
+        <label>CPF:
+          <input type="text" name="cpf" id="cpf" maxlength="14" required placeholder="000.000.000-00" />
+        </label>
+        <div id="cpfInfo" class="muted"></div>
+
+        <!-- Bloco liberado só depois de um CPF válido e inédito -->
+        <fieldset id="camposCadastro" disabled style="border:none;padding:0;margin:0">
+          <label>Nome Completo:
+            <input type="text" name="nome" id="nome" required />
+          </label>
+
+          <label>Comunidade:
+            <select name="comunidade" id="comunidade" required></select>
+          </label>
+
+          <label>Função na Comunidade:
+            <select name="funcaoComunidade" id="funcaoComunidade" class="funcaoSelect" required></select>
+          </label>
+
+          <h3 id="tituloPastorais">Selecione as Pastorais ou Grupos que você participa</h3>
+          <div id="blocoPastorais"></div>
+          <button type="button" id="btnAddPastoral" class="btn-ghost">+ Adicionar Pastoral / Grupo</button>
+
+          <label>Celular:
+            <input type="text" name="celular" id="celular" placeholder="(99) 99999-9999" required />
+          </label>
+
+          <label>Data de Nascimento:
+            <input type="date" name="nascimento" id="nascimento" required />
+          </label>
+
+          <button type="submit" class="btn-lg">Enviar cadastro</button>
+        </fieldset>
+
+        <div class="loading" id="loading"><span class="spinner"></span><span>Enviando...</span></div>
+      </form>
+
+      <div id="mensagem" class="mensagem"></div>
+
+      <!-- ações quando o CPF já existe -->
+      <div id="cpfExistente" class="hidden mt">
+        <a class="btn-block btn-outline" href="./verificar.html">🔎 Sim, fui eu — verificar meu cadastro</a>
+        <a id="btnAvisarAdm" class="btn-block btn-wa" target="_blank" rel="noopener">⚠️ Não fui eu — avisar a administração</a>
+      </div>
+    </div>
+
+    <!-- Comprovante -->
+    <div id="areaPdf" class="hidden">
+      <div id="comprovante" class="card">
+        <h3 style="color:var(--ok);text-align:center;">✅ Cadastro realizado com sucesso!</h3>
+        <p><strong>Nome:</strong> <span id="compNome"></span></p>
+        <p><strong>CPF:</strong> <span id="compCPF"></span></p>
+        <p><strong>Celular:</strong> <span id="compCelular"></span></p>
+        <p><strong>Data de Nascimento:</strong> <span id="compNascimento"></span></p>
+        <p><strong>Comunidade:</strong> <span id="compComunidade"></span></p>
+        <p><strong>Função na Comunidade:</strong> <span id="compFuncaoComunidade"></span></p>
+        <p><strong>Pastoral / Grupo:</strong> <span id="compPastoral"></span></p>
+        <p><strong>Data e Hora:</strong> <span id="compDataHora"></span></p>
+      </div>
+      <div class="row mt">
+        <button type="button" onclick="location.href='./index.html'" class="btn-ghost">🏠 Início</button>
+        <button type="button" id="btnPdf">⬇️ Baixar comprovante</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./assets/js/cadastro.js"></script>
+</body>
+</html>
