@@ -30,7 +30,13 @@
         <input type="text" id="filtro" placeholder="Buscar por nome, CPF ou comunidade..." />
         <select id="filtroComunidade" style="max-width:240px"></select>
       </div>
+      <div class="row" style="margin-top:10px">
+        <button id="btnExportExcel" class="btn-sm">⬇️ Exportar Excel</button>
+        <button id="btnExportPdf" class="btn-sm btn-ghost">⬇️ Exportar PDF</button>
+      </div>
       <p class="muted" id="contadorCadastros"></p>
+      <p class="muted" style="margin-top:-6px">A exportação segue o filtro de comunidade e a busca acima
+        (deixe em “Todas as comunidades” para exportar tudo).</p>
       <div id="listaCadastros"></div>
     </section>
 
@@ -89,6 +95,11 @@
       </div>
     </div>
   </div>
+
+  <!-- Bibliotecas de exportação -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
   <script type="module" src="./assets/js/admin.js"></script>
 </body>

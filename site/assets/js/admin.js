@@ -130,13 +130,12 @@ async function carregarCadastros(){
 $('#filtro').addEventListener('input', renderCadastros);
 $('#filtroComunidade').addEventListener('change', renderCadastros);
 
-function renderCadastros(){
+// aplica busca + filtro de comunidade e retorna a lista resultante
+function filtrarCadastros(){
   const raw = $('#filtro').value.trim().toLowerCase();
   const dig = onlyDigits($('#filtro').value);
   const comFiltro = $('#filtroComunidade').value;
-  const box = $('#listaCadastros'); box.innerHTML = '';
-
-  const filtrados = CADASTROS.filter(c => {
+  return CADASTROS.filter(c => {
     if (comFiltro && c.comunidade !== comFiltro) return false;
     if (!raw) return true;
     const porNome = (c.nome || '').toLowerCase().includes(raw);
@@ -144,6 +143,11 @@ function renderCadastros(){
     const porCpf = dig.length > 0 && c.id.includes(dig);
     return porNome || porCom || porCpf;
   });
+}
+
+function renderCadastros(){
+  const box = $('#listaCadastros'); box.innerHTML = '';
+  const filtrados = filtrarCadastros();
 
   $('#contadorCadastros').textContent = `${filtrados.length} cadastro(s).`;
   filtrados.forEach(c => {
@@ -257,6 +261,78 @@ $('#modalSalvar').addEventListener('click', async () => {
     toast('Cadastro atualizado.', 'ok');
   } catch (e){ console.error(e); toast('Erro ao salvar. Verifique sua permissão.', 'erro'); }
 });
+
+// ---------- Exportação (Excel / PDF) ----------
+function rotuloSelecao(){
+  return $('#filtroComunidade').value || 'Todas as comunidades';
+}
+function nomeArquivo(ext){
+  const c = $('#filtroComunidade').value;
+  const base = c
+    ? c.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '')
+    : 'todas';
+  const data = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+  return `agentes_${base}_${data}.${ext}`;
+}
+
+function exportarExcel(){
+  const lista = filtrarCadastros();
+  if (!lista.length){ toast('Nenhum cadastro para exportar.', 'warn'); return; }
+  if (!window.XLSX){ toast('Biblioteca de Excel não carregou. Recarregue a página.', 'erro'); return; }
+
+  const maxPast = Math.max(1, ...lista.map(c => (c.pastorais || []).length));
+  const header = ['Nome', 'CPF', 'Celular', 'Data de Nascimento', 'Comunidade', 'Função na Comunidade'];
+  for (let i = 1; i <= maxPast; i++) header.push(`Pastoral ${i}`, `Função ${i}`);
+
+  const aoa = [header];
+  lista.forEach(c => {
+    const row = [c.nome || '', formatarCPF(c.id), c.celular || '', dataBR(c.nascimento),
+      c.comunidade || '', c.funcaoComunidade || ''];
+    for (let i = 0; i < maxPast; i++){
+      const p = (c.pastorais || [])[i];
+      row.push(p ? p.nome : '', p ? p.funcao : '');
+    }
+    aoa.push(row);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const wb = XLSX.utils.book_new();
+  const aba = ($('#filtroComunidade').value || 'Todos').replace(/[\\/?*[\]:]/g, ' ').slice(0, 31);
+  XLSX.utils.book_append_sheet(wb, ws, aba);
+  XLSX.writeFile(wb, nomeArquivo('xlsx'));
+  toast(`Excel exportado: ${lista.length} cadastro(s).`, 'ok');
+}
+
+function exportarPdf(){
+  const lista = filtrarCadastros();
+  if (!lista.length){ toast('Nenhum cadastro para exportar.', 'warn'); return; }
+  if (!window.jspdf || !window.jspdf.jsPDF){ toast('Biblioteca de PDF não carregou. Recarregue a página.', 'erro'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const docp = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const titulo = 'Agentes de Pastoral — Paróquia N. S. de Nazaré de Beruri';
+  const sub = `${rotuloSelecao()} • ${lista.length} cadastro(s) • ${new Date().toLocaleDateString('pt-BR')}`;
+  docp.setFontSize(13); docp.text(titulo, 14, 13);
+  docp.setFontSize(9); docp.setTextColor(90); docp.text(sub, 14, 19); docp.setTextColor(0);
+
+  const head = [['Nome', 'CPF', 'Celular', 'Nascimento', 'Comunidade', 'Função Com.', 'Pastorais / Grupos (Função)']];
+  const body = lista.map(c => [
+    c.nome || '', formatarCPF(c.id), c.celular || '', dataBR(c.nascimento),
+    c.comunidade || '', c.funcaoComunidade || '',
+    (c.pastorais || []).map(p => `${p.nome} (${p.funcao})`).join('; ') || '—'
+  ]);
+  docp.autoTable({
+    head, body, startY: 23,
+    styles: { fontSize: 8, cellPadding: 1.6, overflow: 'linebreak' },
+    headStyles: { fillColor: [63, 81, 181] },
+    columnStyles: { 6: { cellWidth: 85 } }
+  });
+  docp.save(nomeArquivo('pdf'));
+  toast(`PDF exportado: ${lista.length} cadastro(s).`, 'ok');
+}
+
+$('#btnExportExcel').addEventListener('click', exportarExcel);
+$('#btnExportPdf').addEventListener('click', exportarPdf);
 
 // ---------- Administradores ----------
 async function carregarAdmins(){

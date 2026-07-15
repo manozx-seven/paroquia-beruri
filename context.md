@@ -124,6 +124,8 @@ Paroquiano/Admin → site estático (Netlify, pasta site/)
 - `verificar.html` — busca por CPF + Data de Nascimento; botão de mudança → WhatsApp do pároco.
 - `login.html` + `assets/js/login.js` — login; primeiro acesso força troca de senha.
 - `admin.html` + `assets/js/admin.js` — painel (abas Cadastros, Configurações, Administradores).
+  Aba Cadastros tem **exportação Excel/PDF** (SheetJS + jsPDF/autotable via CDN), respeitando o
+  filtro de comunidade/busca (todas ou por comunidade).
 - `assets/js/firebase.js` — init + config (PLACEHOLDER a preencher com as chaves do projeto).
 - `assets/js/utils.js` — máscaras (CPF/celular), validação de CPF, toast, selects, WhatsApp.
 - `assets/css/styles.css` — estilo compartilhado.

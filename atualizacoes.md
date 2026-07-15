@@ -20,6 +20,20 @@
 
 ---
 
+## 2026-07-15 — Exportação de cadastros (Excel e PDF) no painel
+- **Arquivos:** `site/admin.html`, `site/assets/js/admin.js`
+- **O que mudou:** na aba **Cadastros** foram adicionados os botões **Exportar Excel** e
+  **Exportar PDF**. A exportação segue o **filtro de comunidade + busca** atuais: em "Todas as
+  comunidades" exporta tudo; selecionando uma comunidade, exporta só ela.
+  - Excel (SheetJS/xlsx via CDN): colunas Nome, CPF, Celular, Data de Nascimento, Comunidade,
+    Função na Comunidade e Pastoral/Função 1..N (expandido conforme o máximo de pastorais).
+  - PDF (jsPDF + autotable via CDN): tabela paisagem com título, comunidade, total e data;
+    pastorais reunidas numa coluna "Pastorais / Grupos (Função)".
+  - Nome do arquivo: `agentes_<comunidade-ou-todas>_<data>.xlsx|pdf`.
+  - Extraída a função `filtrarCadastros()` (reutilizada pela lista e pela exportação).
+- **Motivo:** pedido do usuário: admins poderem exportar as listas (todas ou por comunidade).
+- **Status:** concluído.
+
 ## 2026-07-15 — Projeto versionado e enviado ao GitHub
 - **Arquivos:** `.gitignore` (novo), repositório git inicializado.
 - **O que mudou:** `git init` + primeiro commit + push para
