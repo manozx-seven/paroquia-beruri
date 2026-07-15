@@ -96,7 +96,7 @@ export async function comCarregamento(btn, fn){
   const w = btn.offsetWidth, h = btn.offsetHeight;
   btn.style.minWidth = w + 'px';
   btn.style.minHeight = h + 'px';
-  const escuro = btn.classList.contains('btn-outline') || btn.classList.contains('btn-ghost') || btn.classList.contains('btn-gold') || btn.classList.contains('tab');
+  const escuro = btn.classList.contains('btn-outline') || btn.classList.contains('btn-ghost') || btn.classList.contains('btn-gold') || btn.classList.contains('tab') || btn.classList.contains('linklike');
   const cor = escuro ? '#3d3f95' : '#ffffff';
   btn.innerHTML = `<span class="btn-loader"><l-dot-wave size="30" speed="1" color="${cor}"></l-dot-wave></span>`;
   try {

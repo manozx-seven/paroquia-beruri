@@ -1,6 +1,6 @@
 import { auth, db, COL_ADMINS } from './firebase.js';
 import {
-  signInWithEmailAndPassword, updatePassword, signOut
+  signInWithEmailAndPassword, updatePassword, signOut, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { toast, REGRAS_SENHA, validarSenhaForte, comCarregamento } from './utils.js';
@@ -15,6 +15,21 @@ const btnSalvarSenha = document.getElementById('btnSalvarSenha');
 btnEntrar.addEventListener('click', () => comCarregamento(btnEntrar, entrar));
 document.getElementById('senha').addEventListener('keydown', e => { if (e.key === 'Enter') comCarregamento(btnEntrar, entrar); });
 btnSalvarSenha.addEventListener('click', () => comCarregamento(btnSalvarSenha, salvarSenha));
+
+// Esqueci minha senha → envia link de redefinição por e-mail
+const linkEsqueci = document.getElementById('linkEsqueci');
+linkEsqueci.addEventListener('click', () => comCarregamento(linkEsqueci, async () => {
+  const email = document.getElementById('email').value.trim();
+  if (!email){ toast('Digite seu e-mail no campo acima primeiro.', 'warn'); return; }
+  try {
+    await sendPasswordResetEmail(auth, email);
+    toast('Enviamos um link de redefinição para o seu e-mail. Verifique também o spam.', 'ok', 7000);
+  } catch (e){
+    console.error(e);
+    const map = { 'auth/invalid-email': 'E-mail inválido.', 'auth/user-not-found': 'E-mail não encontrado.' };
+    toast(map[e.code] || 'Não foi possível enviar o e-mail. Tente novamente.', 'erro');
+  }
+}));
 
 // ---- Regras de senha (lista visual + validação ao vivo) ----
 const listaRegras = document.getElementById('regrasSenha');

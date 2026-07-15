@@ -31,8 +31,9 @@ async function init(){
 
   preencherSelect(document.getElementById('comunidade'), LISTAS.comunidades || []);
   preencherSelect(document.getElementById('funcaoComunidade'), LISTAS.funcoes || []);
-  // Obs.: a função na comunidade é independente das funções nas pastorais,
-  // por isso NÃO participa da regra de "Coordenação/Assessoria só uma vez".
+  // A função na comunidade participa da regra: se for Coordenação, não pode Coordenação
+  // em pastoral; se for Assessoria, não pode Assessoria em pastoral (e vice-versa).
+  document.getElementById('funcaoComunidade').addEventListener('change', verificarFuncoes);
   adicionarPastoral();
 }
 

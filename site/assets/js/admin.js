@@ -2,13 +2,15 @@ import { app, auth, db, firebaseConfig, COL_CADASTROS, COL_ADMINS, CONFIG_DOC } 
 import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   onAuthStateChanged, signOut, getAuth,
-  createUserWithEmailAndPassword, signOut as signOutApp
+  createUserWithEmailAndPassword, signOut as signOutApp,
+  updatePassword, reauthenticateWithCredential, EmailAuthProvider
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
-  formatarCPF, dataBR, toast, preencherSelect, onlyDigits, comCarregamento
+  formatarCPF, dataBR, toast, preencherSelect, onlyDigits, comCarregamento,
+  REGRAS_SENHA, validarSenhaForte
 } from './utils.js';
 
 let MEU = { uid: null, email: null, role: null };
@@ -413,5 +415,46 @@ btnCriarAdm.addEventListener('click', () => comCarregamento(btnCriarAdm, async (
     toast(map[e.code] || 'Erro ao criar administrador.', 'erro');
   } finally {
     try { await deleteApp(secApp); } catch (_){}
+  }
+}));
+
+// ---------- Alterar minha senha (aba Configurações) ----------
+const pwAtual = $('#pwAtual'), pwNova = $('#pwNova'), pwNova2 = $('#pwNova2');
+const btnTrocarSenha = $('#btnTrocarSenha'), pwLista = $('#pwRegras');
+
+REGRAS_SENHA.forEach(r => {
+  const li = document.createElement('li'); li.dataset.id = r.id; li.textContent = r.txt; pwLista.appendChild(li);
+});
+function avaliarPw(){
+  const s = pwNova.value; let todasOk = true;
+  REGRAS_SENHA.forEach(r => {
+    const li = pwLista.querySelector(`[data-id="${r.id}"]`);
+    const ok = r.teste(s); li.classList.toggle('ok', ok); if (!ok) todasOk = false;
+  });
+  const match = s.length > 0 && s === pwNova2.value;
+  btnTrocarSenha.disabled = !(todasOk && match && pwAtual.value.length > 0);
+}
+[pwAtual, pwNova, pwNova2].forEach(el => el.addEventListener('input', avaliarPw));
+
+btnTrocarSenha.addEventListener('click', () => comCarregamento(btnTrocarSenha, async () => {
+  const s1 = pwNova.value, s2 = pwNova2.value;
+  const { ok, faltas } = validarSenhaForte(s1);
+  if (!ok){ toast('Senha fraca. Falta: ' + faltas.map(f => f.txt.toLowerCase()).join('; '), 'warn', 6000); return; }
+  if (s1 !== s2){ toast('As senhas não conferem.', 'warn'); return; }
+  try {
+    // reautentica com a senha atual antes de trocar (evita "requires-recent-login")
+    const cred = EmailAuthProvider.credential(MEU.email, pwAtual.value);
+    await reauthenticateWithCredential(auth.currentUser, cred);
+    await updatePassword(auth.currentUser, s1);
+    pwAtual.value = ''; pwNova.value = ''; pwNova2.value = ''; avaliarPw();
+    toast('Senha alterada com sucesso!', 'ok');
+  } catch (e){
+    console.error(e);
+    const map = {
+      'auth/invalid-credential': 'Senha atual incorreta.',
+      'auth/wrong-password': 'Senha atual incorreta.',
+      'auth/too-many-requests': 'Muitas tentativas. Aguarde um pouco e tente de novo.'
+    };
+    toast(map[e.code] || 'Não foi possível alterar a senha.', 'erro');
   }
 }));

@@ -20,6 +20,22 @@
 
 ---
 
+## 2026-07-15 — Esqueci/alterar senha, logo em círculo e regra função comunidade × pastorais
+- **Arquivos:** `site/login.html` + `login.js`, `site/admin.html` + `admin.js`, `site/index.html`,
+  `site/cadastro.html` + `cadastro.js`, `assets/css/styles.css`, `assets/js/utils.js`.
+- **Esqueci minha senha (login):** link "Esqueci minha senha" que envia e-mail de redefinição via
+  Firebase (`sendPasswordResetEmail`).
+- **Alterar senha (painel → aba Configurações):** card "Minha conta — alterar senha" com senha atual +
+  nova senha (regras de senha forte com checklist ao vivo) + confirmação. Faz **reautenticação**
+  (`reauthenticateWithCredential`) antes de `updatePassword` para evitar erro de sessão antiga.
+- **Logo em círculo:** na tela inicial (e no login) a logo passou a ficar dentro de um medalhão
+  circular (`.logo-circle`) com anel dourado sutil, em vez de imagem quadrada.
+- **Nova regra função na comunidade × pastorais:** a "Função na Comunidade" voltou a participar da
+  regra de Coordenação/Assessoria — se for **Coordenação**, a opção Coordenação fica indisponível nas
+  pastorais/grupos; se for **Assessoria**, idem para Assessoria (e vice-versa). Implementado
+  reincluindo o select no grupo `.funcaoSelect` + listener `change` chamando `verificarFuncoes()`.
+- **Status:** concluído.
+
 ## 2026-07-15 — Logo oficial, favicon e botão de admin flutuante
 - **Arquivos:** `site/assets/img/` (logo.png/jpeg, favicon-32/64.png, apple-touch-icon.png),
   `site/index.html`, `site/login.html`, `styles.css`, favicon em cadastro/verificar/admin, `.gitignore`.

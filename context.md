@@ -163,10 +163,14 @@ Paroquiano/Admin → site estático (Netlify, pasta site/)
 - CPF: máscara `000.000.000-00` enquanto digita + validação dos dígitos verificadores.
 - Ao digitar CPF já existente: trava todos os campos, toast de aviso, botões "fui eu → verificar" e
   "não fui eu → avisar administração (WhatsApp)".
-- Pastorais: adicionar/remover blocos; sem pastoral duplicada; **Coordenação** e **Assessoria** só uma vez cada.
+- Pastorais: adicionar/remover blocos; sem pastoral duplicada; **Coordenação** e **Assessoria** só uma
+  vez cada — a **Função na Comunidade participa dessa regra**: se for Coordenação, não pode Coordenação
+  em pastoral; se for Assessoria, não pode Assessoria em pastoral (e vice-versa).
 - Verificar cadastro: exige CPF **e** data de nascimento corretos para exibir os dados.
 - Solicitar mudança: botão abre WhatsApp do pároco **(97) 98802-5117** (`wa.me/5597988025117`) com msg pronta;
   a alteração de fato é feita pelo ADM/DEV no painel.
+- Login tem **"Esqueci minha senha"** (envia e-mail de redefinição). No painel, aba **Configurações**,
+  há **"Minha conta — alterar senha"** (reautentica com a senha atual e troca por uma senha forte).
 - Primeiro acesso de admin (`mustChangePassword=true`): força cadastro de nova senha, que deve ser
   **forte** (mín. 8 caracteres, maiúscula, minúscula, número e caractere especial — ver
   `REGRAS_SENHA`/`validarSenhaForte` em `utils.js`). Lista de regras marca ✔/✗ ao vivo no `login.html`.

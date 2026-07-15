@@ -57,7 +57,24 @@
 
     <!-- ABA CONFIGURAÇÕES -->
     <section id="tab-config" class="tabpane hidden">
-      <p class="muted">Estes itens aparecem no formulário de cadastro. Alterações valem para novos cadastros.</p>
+      <div class="card">
+        <h4>Minha conta — alterar senha</h4>
+        <label>Senha atual
+          <input type="password" id="pwAtual" autocomplete="current-password" />
+        </label>
+        <div class="row">
+          <label>Nova senha
+            <input type="password" id="pwNova" autocomplete="new-password" />
+          </label>
+          <label>Confirmar nova senha
+            <input type="password" id="pwNova2" autocomplete="new-password" />
+          </label>
+        </div>
+        <ul id="pwRegras" class="regras"></ul>
+        <button id="btnTrocarSenha" class="btn-sm" disabled>Alterar minha senha</button>
+      </div>
+
+      <p class="muted mt">Estes itens aparecem no formulário de cadastro. Alterações valem para novos cadastros.</p>
       <div class="row" style="align-items:flex-start">
         <div class="card" style="flex:1">
           <h4>Comunidades</h4>
