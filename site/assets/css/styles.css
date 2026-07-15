@@ -50,14 +50,15 @@ a{color:var(--pri-dark)}
 
 .logo{display:block;width:clamp(104px,28vw,148px);height:auto;margin:0 auto 10px;filter:drop-shadow(0 6px 14px rgba(20,22,40,.14))}
 .logo-sm{width:clamp(80px,20vw,104px)}
-/* logo dentro de círculo (medalhão) — imagem quadrada recortada dentro do círculo */
+/* logo dentro de círculo (medalhão) — imagem centralizada; cantos vazios recortados pelo círculo */
 .logo-circle{
-  width:clamp(126px,33vw,166px);aspect-ratio:1;margin:0 auto 12px;padding:15%;
-  background:#fff;border-radius:50%;overflow:hidden;display:grid;place-items:center;
+  width:clamp(126px,33vw,166px);aspect-ratio:1;margin:0 auto 12px;
+  background:#fff;border-radius:50%;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
   box-shadow:0 0 0 4px #fff, 0 0 0 5px rgba(176,137,76,.42), 0 14px 30px -14px rgba(20,22,40,.35)
 }
-.logo-circle img{width:100%;height:100%;object-fit:contain;display:block}
-.logo-circle.sm{width:clamp(94px,24vw,116px);padding:13%}
+.logo-circle img{width:90%;height:90%;object-fit:contain;display:block}
+.logo-circle.sm{width:clamp(94px,24vw,116px)}
 
 /* olho para ver a senha */
 .pw-wrap{position:relative;display:block;margin-top:7px}
