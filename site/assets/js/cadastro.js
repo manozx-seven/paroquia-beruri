@@ -57,13 +57,14 @@ async function checarCPF(cpf){
     const snap = await getDoc(doc(db, COL_CADASTROS, cpf));
     if (snap.exists()){
       liberar(false); // trava TODOS os campos
-      setCpfStatus('err', '⚠️ Este CPF já está cadastrado.');
+      setCpfStatus('err', 'Este CPF já está cadastrado.');
       toast('CPF já cadastrado! Se não foi você, avise a administração.', 'warn', 6000);
       const d = snap.data();
       const msg = `Olá! Estava tentando me cadastrar como agente de pastoral, mas o CPF `
         + `${formatarCPF(cpf)} já aparece como cadastrado e não fui eu. Podem verificar, por favor?`;
       document.getElementById('btnAvisarAdm').href = linkWhatsApp(msg);
       cpfExistente.classList.remove('hidden');
+      cpfExistente.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } else {
       setCpfStatus('ok', '✓ CPF válido. Preencha os demais campos.');
       liberar(true);

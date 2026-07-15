@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Entrar — Administração</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="./assets/css/styles.css" />
@@ -11,7 +11,9 @@
 </head>
 <body>
   <div class="container" style="max-width:440px">
-    <a class="back" href="./index.html">← Voltar</a>
+    <a class="back" href="./index.html">
+      <svg class="ic ic-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg> Voltar
+    </a>
     <h2>Área da Administração</h2>
 
     <!-- Login -->
@@ -28,7 +30,7 @@
 
     <!-- Primeiro acesso: trocar senha -->
     <div id="viewTrocarSenha" class="hidden">
-      <div class="intro">🔑 Primeiro acesso detectado. Por segurança, cadastre uma nova senha da sua escolha.</div>
+      <div class="intro">Primeiro acesso detectado. Por segurança, cadastre uma nova senha da sua escolha.</div>
       <label>Nova senha:
         <input type="password" id="novaSenha" autocomplete="new-password" />
       </label>

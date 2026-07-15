@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Painel — Administração</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="./assets/css/styles.css" />
@@ -13,9 +13,12 @@
   <div class="container wide">
     <div class="topbar">
       <h2 style="margin:0;text-align:left">Painel de Administração</h2>
-      <div>
+      <div class="who">
         <span id="quemSou" class="muted"></span>
-        <button id="btnSair" class="btn-danger btn-sm" style="margin-left:10px">Sair</button>
+        <button id="btnSair" class="btn-danger btn-sm">
+          <svg class="ic ic-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+          Sair
+        </button>
       </div>
     </div>
 
@@ -25,17 +28,23 @@
       <button class="tab" data-tab="admins">Administradores</button>
     </div>
 
-    <div id="carregando" class="loading show"><l-dot-wave size="40" speed="1" color="#6366f1"></l-dot-wave><span>Carregando...</span></div>
+    <div id="carregando" class="loading show"><l-dot-wave size="40" speed="1" color="#3d3f95"></l-dot-wave><span>Carregando...</span></div>
 
     <!-- ABA CADASTROS -->
     <section id="tab-cadastros" class="tabpane hidden">
       <div class="row">
         <input type="text" id="filtro" placeholder="Buscar por nome, CPF ou comunidade..." />
-        <select id="filtroComunidade" style="max-width:240px"></select>
+        <select id="filtroComunidade"></select>
       </div>
-      <div class="row" style="margin-top:10px">
-        <button id="btnExportExcel" class="btn-sm">⬇️ Exportar Excel</button>
-        <button id="btnExportPdf" class="btn-sm btn-ghost">⬇️ Exportar PDF</button>
+      <div class="card-actions" style="margin-top:12px">
+        <button id="btnExportExcel" class="btn-sm">
+          <svg class="ic ic-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          Exportar Excel
+        </button>
+        <button id="btnExportPdf" class="btn-sm btn-ghost">
+          <svg class="ic ic-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          Exportar PDF
+        </button>
       </div>
       <p class="muted" id="contadorCadastros"></p>
       <p class="muted" style="margin-top:-6px">A exportação segue o filtro de comunidade e a busca acima
@@ -75,7 +84,7 @@
         <div class="row">
           <input type="email" id="admEmail" placeholder="E-mail" />
           <input type="text" id="admSenha" placeholder="Senha provisória (mín. 6)" />
-          <select id="admRole" style="max-width:180px">
+          <select id="admRole">
             <option value="adm">Administrador</option>
             <option value="dev">Desenvolvedor</option>
           </select>
@@ -88,8 +97,8 @@
   </div>
 
   <!-- Modal edição de cadastro -->
-  <div id="modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:5000;display:flex;align-items:flex-start;justify-content:center;padding:24px;overflow:auto">
-    <div class="container" style="max-width:600px;margin:0">
+  <div id="modal" class="hidden">
+    <div class="container">
       <h3 id="modalTitulo">Editar cadastro</h3>
       <div id="modalCorpo"></div>
       <div class="row mt">

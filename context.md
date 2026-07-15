@@ -133,10 +133,16 @@ Paroquiano/Admin → site estático (Netlify, pasta site/)
   transições/animações, toasts). Reescrito no redesign de 2026-07-15.
 
 ### Design / UX
-- Visual moderno com transições fluidas; **loaders `ldrs` (dot-wave)** carregados via CDN em cada
-  página (`https://cdn.jsdelivr.net/npm/ldrs/dist/auto/dotWave.js`).
-- Todo botão de ação usa `comCarregamento()` → mostra loader e impede duplo clique/duas ações.
+- **Estética séria/sofisticada:** paleta índigo profundo + dourado, títulos em serifada **Spectral**,
+  corpo em **Inter**, cantos discretos, sombras contidas. **Sem emojis** — usa **ícones SVG** (line
+  icons + glifo oficial do WhatsApp) nos botões/links.
+- **Loaders `ldrs` (dot-wave)** via CDN em cada página; todo botão de ação usa `comCarregamento()`
+  → mostra loader e impede duplo clique/duas ações.
 - Ordem dos campos do formulário: **CPF → Data de Nascimento → Nome → ...** (nascimento logo após o CPF).
+- **Alerta de CPF já cadastrado** aparece no **topo** (abaixo do CPF), como cartão de alerta com os
+  dois botões (verificar / avisar administração).
+- **Totalmente responsivo** (celular a desktop): `clamp()` para tipografia/espaços, inputs 16px
+  (anti-zoom iOS), `.row` empilha ≤560px, abas roláveis, modal adaptativo, `viewport-fit=cover`.
 - Fora de `site/`: `netlify.toml` (publica `site/`), `firestore.rules` (regras), `SETUP-FIREBASE.md` (guia).
 
 ### Modelo de dados no Firestore

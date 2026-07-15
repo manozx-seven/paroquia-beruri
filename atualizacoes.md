@@ -20,6 +20,23 @@
 
 ---
 
+## 2026-07-15 — Refinamento visual (sério/sofisticado), ícones SVG e responsividade total
+- **Arquivos:** `site/assets/css/styles.css` (reescrito), `site/assets/js/utils.js`, `admin.js`, `cadastro.js`,
+  e todas as páginas (`index/cadastro/verificar/login/admin.html`).
+- **Visual mais sério/sofisticado:** troca do tema "candy" por paleta **índigo profundo + dourado**,
+  títulos em serifada elegante (**Spectral**) com corpo em Inter, cantos mais discretos, sombras
+  contidas, gradientes suaves. Fundo neutro. Removidos os emojis (visual "infantil").
+- **Ícones SVG profissionais** (line icons + glifo oficial do **WhatsApp**) no lugar dos emojis,
+  em todos os botões/links (cadastro, verificar, login, painel, comprovante).
+- **Alerta de "CPF já cadastrado" movido para o TOPO:** agora aparece logo abaixo do campo de CPF,
+  como um cartão de alerta com os dois botões (verificar / avisar administração), e rola à vista.
+  Antes ficava no fim do formulário.
+- **Responsividade total:** tipografia/espaçamentos fluidos com `clamp()`, inputs em 16px (evita zoom
+  no iOS), `.row` empilha em telas ≤560px, abas com rolagem horizontal, colunas de Configurações
+  quebram em tablet, modal com padding adaptativo e rolagem, topbar/who quebram linha, `overflow-x:hidden`,
+  ajustes para telas ≤380px e para toque (`hover:none`). `viewport-fit=cover` + `env(safe-area-inset)`.
+- **Status:** concluído (pendente teste visual real após deploy).
+
 ## 2026-07-15 — Redesign completo + loaders (ldrs) + revisão de bugs
 - **Arquivos:** `site/assets/css/styles.css` (reescrito), `site/assets/js/utils.js`,
   `site/index.html`, `site/cadastro.html` + `cadastro.js`, `site/verificar.html`,

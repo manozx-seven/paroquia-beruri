@@ -15,6 +15,9 @@ let MEU = { uid: null, email: null, role: null };
 let LISTAS = { comunidades: [], pastorais: [], funcoes: [] };
 let CADASTROS = []; // {id, ...dados}
 
+const IC_EDIT = '<svg class="ic ic-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+const IC_TRASH = '<svg class="ic ic-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg>';
+
 const $ = (s) => document.querySelector(s);
 const carregando = $('#carregando');
 
@@ -160,9 +163,9 @@ function renderCadastros(){
     card.innerHTML = `
       <div class="topbar">
         <h4 style="margin:0">${c.nome || '(sem nome)'}</h4>
-        <div>
-          <button class="btn-sm btn-ghost" data-edit="${c.id}">Editar</button>
-          <button class="btn-sm btn-danger" data-del="${c.id}">Excluir</button>
+        <div class="card-actions">
+          <button class="btn-sm btn-ghost" data-edit="${c.id}">${IC_EDIT} Editar</button>
+          <button class="btn-sm btn-danger" data-del="${c.id}">${IC_TRASH} Excluir</button>
         </div>
       </div>
       <p class="muted" style="margin:4px 0">
@@ -361,7 +364,7 @@ async function carregarAdmins(){
           ${souEu ? '<span class="muted">(você)</span>' : ''}
           ${a.mustChangePassword ? '<span class="muted">• senha provisória</span>' : ''}
         </div>
-        ${podeExcluir ? `<button class="btn-sm btn-danger" data-deladm="${a.id}">Excluir</button>` : ''}
+        ${podeExcluir ? `<button class="btn-sm btn-danger" data-deladm="${a.id}">${IC_TRASH} Excluir</button>` : ''}
       </div>`;
     box.appendChild(card);
   });
