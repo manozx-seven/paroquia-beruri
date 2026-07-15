@@ -20,6 +20,18 @@
 
 ---
 
+## 2026-07-15 — Projeto versionado e enviado ao GitHub
+- **Arquivos:** `.gitignore` (novo), repositório git inicializado.
+- **O que mudou:** `git init` + primeiro commit + push para
+  **https://github.com/manozx-seven/paroquia-beruri** (branch `main`).
+  Criado `.gitignore` que **exclui a planilha de dados pessoais** (`*.xlsx` e a pasta
+  "Agentes de Pastoral ... planilha de dados/") — confirmado que não foi enviada.
+- **Motivo:** o usuário vai conectar o repositório ao Netlify (deploy automático).
+- **Atenção:** a `apiKey` do Firebase fica no `site/assets/js/firebase.js` — isso é normal e seguro
+  para apps web Firebase (é identificador público); a proteção real vem das regras do Firestore.
+- **Status:** concluído. **Próximo passo do usuário:** no Netlify, "Import from Git" apontando para
+  esse repositório (o `netlify.toml` já publica a pasta `site/`).
+
 ## 2026-07-15 — Regras de senha forte na troca do primeiro acesso
 - **Arquivos:** `site/assets/js/utils.js`, `site/assets/js/login.js`, `site/login.html`, `site/assets/css/styles.css`
 - **O que mudou:** na troca de senha do primeiro acesso, a nova senha passa a exigir **senha forte**:
