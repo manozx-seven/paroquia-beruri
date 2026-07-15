@@ -10,7 +10,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   formatarCPF, dataBR, toast, preencherSelect, onlyDigits, comCarregamento,
-  REGRAS_SENHA, validarSenhaForte
+  REGRAS_SENHA, validarSenhaForte, olhoSenhaEm
 } from './utils.js';
 
 let MEU = { uid: null, email: null, role: null };
@@ -218,6 +218,13 @@ function abrirEdicao(id){
     <div id="mPastorais"></div>
     <button type="button" class="btn-ghost btn-sm mt" id="mAddPast">+ Adicionar pastoral</button>`;
 
+  const mNome = $('#mNome');
+  mNome.addEventListener('input', () => {
+    const pos = mNome.selectionStart;
+    mNome.value = mNome.value.toLocaleUpperCase('pt-BR');
+    mNome.setSelectionRange(pos, pos);
+  });
+
   preencherSelect($('#mComunidade'), LISTAS.comunidades);
   preencherSelect($('#mFuncaoCom'), LISTAS.funcoes);
   $('#mComunidade').value = c.comunidade || '';
@@ -255,7 +262,7 @@ btnModalSalvar.addEventListener('click', () => comCarregamento(btnModalSalvar, a
   })).filter(p => p.nome);
 
   const dados = {
-    nome: $('#mNome').value.trim(),
+    nome: $('#mNome').value.trim().toLocaleUpperCase('pt-BR'),
     celular: $('#mCelular').value,
     nascimento: $('#mNasc').value,
     comunidade: $('#mComunidade').value,
@@ -421,6 +428,9 @@ btnCriarAdm.addEventListener('click', () => comCarregamento(btnCriarAdm, async (
 // ---------- Alterar minha senha (aba Configurações) ----------
 const pwAtual = $('#pwAtual'), pwNova = $('#pwNova'), pwNova2 = $('#pwNova2');
 const btnTrocarSenha = $('#btnTrocarSenha'), pwLista = $('#pwRegras');
+
+// olho para mostrar/ocultar senha (troca de senha + senha provisória de novos admins)
+olhoSenhaEm(pwAtual, pwNova, pwNova2, $('#admSenha'));
 
 REGRAS_SENHA.forEach(r => {
   const li = document.createElement('li'); li.dataset.id = r.id; li.textContent = r.txt; pwLista.appendChild(li);

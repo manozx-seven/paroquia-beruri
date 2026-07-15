@@ -21,6 +21,14 @@ function setCpfStatus(tipo, html){ cpfInfo.className = 'cpf-status ' + tipo; cpf
 aplicarMascaraCPF(cpfEl);
 aplicarMascaraCelular(document.getElementById('celular'));
 
+// Nome completo sempre em MAIÚSCULO
+const nomeEl = document.getElementById('nome');
+nomeEl.addEventListener('input', () => {
+  const pos = nomeEl.selectionStart;
+  nomeEl.value = nomeEl.value.toLocaleUpperCase('pt-BR');
+  nomeEl.setSelectionRange(pos, pos);
+});
+
 // ---- Carrega listas do Firestore ----
 init();
 async function init(){
@@ -167,7 +175,7 @@ async function enviarCadastro(){
 
   const registro = {
     cpf,
-    nome: dados.nome.trim(),
+    nome: dados.nome.trim().toLocaleUpperCase('pt-BR'),
     celular: dados.celular,
     nascimento: dados.nascimento,
     comunidade: dados.comunidade,

@@ -3,7 +3,7 @@ import {
   signInWithEmailAndPassword, updatePassword, signOut, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { toast, REGRAS_SENHA, validarSenhaForte, comCarregamento } from './utils.js';
+import { toast, REGRAS_SENHA, validarSenhaForte, comCarregamento, olhoSenhaEm } from './utils.js';
 
 const viewLogin = document.getElementById('viewLogin');
 const viewTroca = document.getElementById('viewTrocarSenha');
@@ -11,6 +11,9 @@ const novaSenhaEl = document.getElementById('novaSenha');
 const novaSenha2El = document.getElementById('novaSenha2');
 const btnEntrar = document.getElementById('btnEntrar');
 const btnSalvarSenha = document.getElementById('btnSalvarSenha');
+
+// olho para mostrar/ocultar senha
+olhoSenhaEm(document.getElementById('senha'), novaSenhaEl, novaSenha2El);
 
 btnEntrar.addEventListener('click', () => comCarregamento(btnEntrar, entrar));
 document.getElementById('senha').addEventListener('keydown', e => { if (e.key === 'Enter') comCarregamento(btnEntrar, entrar); });

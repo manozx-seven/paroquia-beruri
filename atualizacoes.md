@@ -20,6 +20,21 @@
 
 ---
 
+## 2026-07-15 — Ajustes: nome maiúsculo, olho de senha, círculo da logo e espaçamentos
+- **Arquivos:** `assets/css/styles.css`, `assets/js/utils.js`, `cadastro.js`, `admin.js`,
+  `login.js`, `admin.html`.
+- **Nome completo sempre em MAIÚSCULO:** no formulário (ao digitar) e ao salvar; também na edição
+  pelo painel (`toLocaleUpperCase('pt-BR')`).
+- **Correção do círculo da logo:** a imagem quadrada estava vazando para fora do círculo. Agora o
+  medalhão tem `overflow:hidden` e `padding:15%` (13% no menor), de modo que o quadrado inteiro cabe
+  dentro do círculo, sem cantos para fora.
+- **Olho para ver a senha:** helper `olhoSenha()`/`olhoSenhaEm()` em `utils.js` adiciona o ícone de
+  olho (mostrar/ocultar) em todos os campos de senha — login, troca no primeiro acesso, alterar senha
+  no painel e senha provisória de novo admin.
+- **Espaçamento:** botão "Criar administrador" (aba Administradores) estava colado aos campos; agora
+  tem o mesmo espaçamento dos demais.
+- **Status:** concluído.
+
 ## 2026-07-15 — Esqueci/alterar senha, logo em círculo e regra função comunidade × pastorais
 - **Arquivos:** `site/login.html` + `login.js`, `site/admin.html` + `admin.js`, `site/index.html`,
   `site/cadastro.html` + `cadastro.js`, `assets/css/styles.css`, `assets/js/utils.js`.

@@ -103,13 +103,13 @@
         <h4>Cadastrar novo administrador</h4>
         <div class="row">
           <input type="email" id="admEmail" placeholder="E-mail" />
-          <input type="text" id="admSenha" placeholder="Senha provisória (mín. 6)" />
+          <input type="password" id="admSenha" placeholder="Senha provisória (mín. 6)" autocomplete="new-password" />
           <select id="admRole">
             <option value="adm">Administrador</option>
             <option value="dev">Desenvolvedor</option>
           </select>
         </div>
-        <button id="btnCriarAdm" class="btn-sm">Criar administrador</button>
+        <button id="btnCriarAdm" class="btn-sm" style="margin-top:14px">Criar administrador</button>
         <p class="muted">No primeiro acesso, o sistema pedirá que ele cadastre uma nova senha.</p>
       </div>
       <div id="listaAdmins"></div>
