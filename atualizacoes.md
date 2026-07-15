@@ -20,6 +20,23 @@
 
 ---
 
+## 2026-07-15 — PONTO DE PARADA da sessão
+- **Onde paramos:** sistema novo (site `site/` + Firebase) funcional e publicado; **20 cadastros da
+  planilha já migrados** para o Firestore. Repositório GitHub em dia (branch `main` sincronizada).
+- **Feito nesta sessão (resumo):** migração Netlify+Firebase; cadastro/verificar/login/painel;
+  exportação Excel/PDF; redesign sério + ícones SVG + responsividade; logo oficial + favicon;
+  botão admin flutuante; esqueci/alterar senha; olho de senha; nome em MAIÚSCULO; regra função
+  comunidade × pastorais; migração dos dados.
+- **Pendências para retomar depois (do usuário):**
+  1. Concluir/conferir o **Firebase** se ainda faltar algo do `SETUP-FIREBASE.md` (regras publicadas,
+     `config/listas` semeado, 1º DEV criado, domínio do Netlify autorizado no Authentication).
+  2. Conferir se o **Netlify** está publicando a partir do GitHub (deploy automático).
+  3. Opcional: personalizar o template de e-mail de "redefinir senha" (Firebase → Authentication →
+     Templates), em português.
+- **Ideias futuras registradas:** relatório de contagem por pastoral/comunidade; segurança forte do
+  "verificar cadastro" via Firebase Functions; apagar conta do Auth ao remover admin.
+- **Status:** sessão encerrada a pedido do usuário.
+
 ## 2026-07-15 — Migração dos dados da planilha antiga para o Firestore
 - **O que foi feito:** os **20 cadastros** das abas por comunidade da planilha `.xlsx` foram
   importados para a coleção `cadastros` do Firestore (projeto paroquia-beruri).

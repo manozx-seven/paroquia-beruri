@@ -7,11 +7,14 @@
 
 O projeto está em **migração**. Existem DUAS versões:
 
-- **Versão NOVA (em construção — foco atual):** site estático em `site/` para publicar no
-  **Netlify**, usando **Firebase** (Firestore como banco + Authentication para login).
-  Tem login de ADM e DEV, cadastro público, verificação por CPF+nascimento e painel administrativo.
-  Detalhes na seção 8. Passo a passo de configuração em `SETUP-FIREBASE.md`.
-  **Pendência:** o usuário ainda precisa criar o projeto Firebase e publicar (ver `SETUP-FIREBASE.md`).
+- **Versão NOVA (ATIVA — foco atual):** site estático em `site/` publicado no **Netlify**
+  (repo GitHub: github.com/manozx-seven/paroquia-beruri), usando **Firebase** (projeto
+  `paroquia-beruri`: Firestore como banco + Authentication para login). Tem login de ADM e DEV,
+  cadastro público, verificação por CPF+nascimento, painel administrativo, exportação Excel/PDF,
+  esqueci/alterar senha. **Os 20 cadastros da planilha antiga já foram migrados** para o Firestore.
+  Detalhes na seção 8. Configuração em `SETUP-FIREBASE.md`.
+  **Pendências:** conferir itens finais do `SETUP-FIREBASE.md` (regras publicadas, `config/listas`
+  semeado, 1º DEV, domínio Netlify autorizado) — ver o PONTO DE PARADA no topo do `atualizacoes.md`.
 - **Versão ANTIGA (legada — ainda no ar):** `formulario.html` no Google Sites + Google Apps Script +
   Google Sheets. Descrita nas seções 3–5. Mantida como referência até a nova entrar no ar.
 
