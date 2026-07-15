@@ -20,6 +20,23 @@
 
 ---
 
+## 2026-07-15 — Migração dos dados da planilha antiga para o Firestore
+- **O que foi feito:** os **20 cadastros** das abas por comunidade da planilha `.xlsx` foram
+  importados para a coleção `cadastros` do Firestore (projeto paroquia-beruri).
+- **Processo:** script Python leu a planilha (converteu datas seriais do Excel → `yyyy-mm-dd`,
+  validou CPFs, normalizou nomes) e gerou um JSON; um script Node (Firebase Web SDK) gravou cada
+  registro com id = CPF (só dígitos), pulando os que já existissem. Campos: cpf, nome (MAIÚSCULO),
+  celular, nascimento, comunidade, funcaoComunidade, pastorais[{nome,funcao}], criadoEm (data/hora
+  original do cadastro), atualizadoEm, `origem:'planilha-migracao'`.
+- **Mapeamentos:** aba "Matriz" → comunidade **"Nossa Senhora de Nazaré (Matriz)"**; demais abas
+  mantiveram o nome. Todas as pastorais/funções já batiam com as listas novas.
+- **Verificação:** 20 importados, 0 duplicados, 0 CPFs inválidos, 0 sem nascimento; conferido lendo
+  registros de volta do Firestore.
+- **Privacidade:** a ferramenta de migração e o JSON (com dados pessoais) foram feitos **localmente**,
+  ignorados no `.gitignore` e apagados após a importação — **nada disso foi para o GitHub**.
+- **Obs.:** a comunidade "Divino Espírito Santo" não tinha aba na planilha (0 registros migrados).
+- **Status:** concluído.
+
 ## 2026-07-15 — Correção: logo do círculo aparecia minúscula
 - **Arquivos:** `assets/css/styles.css`
 - **O que mudou:** o `.logo-circle` estava com `display:grid` + `padding:15%`, o que fazia a altura

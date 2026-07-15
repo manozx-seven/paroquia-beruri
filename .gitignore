@@ -6,6 +6,11 @@ Agentes de Pastoral - Beruri - Oficial - planilha de dados/
 /WhatsApp Image*.jpeg
 /WhatsApp Image*.jpg
 
+# Ferramenta e dados temporários de migração (contêm dados pessoais — NÃO versionar)
+/_migracao/
+/_migracao_cadastros.json
+/Captura de tela*.png
+
 # Sistema operacional
 Thumbs.db
 Desktop.ini
