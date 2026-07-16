@@ -33,6 +33,8 @@ onAuthStateChanged(auth, async (user) => {
     if (adm.mustChangePassword){ location.href = './login.html'; return; }
     MEU = { uid: user.uid, email: user.email, role: adm.role || 'adm' };
     $('#quemSou').innerHTML = `${MEU.email} <span class="badge ${MEU.role}">${MEU.role === 'dev' ? 'DEV' : 'ADM'}</span>`;
+    // Só o DEV pode escolher o papel (ADM/DEV) ao criar conta; ADM comum só cria administrador.
+    if (MEU.role === 'dev') $('#admRole').classList.remove('hidden');
     await carregarTudo();
   } catch (e){
     console.error(e); toast('Erro ao carregar o painel.', 'erro');
@@ -130,20 +132,31 @@ async function salvarListas(){
 // ---------- Cadastros ----------
 async function carregarCadastros(){
   const qs = await getDocs(collection(db, COL_CADASTROS));
-  CADASTROS = qs.docs.map(d => ({ id: d.id, ...d.data() }))
-    .sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt-BR'));
+  CADASTROS = qs.docs.map(d => ({ id: d.id, ...d.data() }));
   renderCadastros();
 }
 
 $('#filtro').addEventListener('input', renderCadastros);
 $('#filtroComunidade').addEventListener('change', renderCadastros);
+$('#ordenar').addEventListener('change', renderCadastros);
 
-// aplica busca + filtro de comunidade e retorna a lista resultante
+// Converte o campo criadoEm (Timestamp do Firestore, {seconds}, ou string) em milissegundos p/ ordenar.
+function criadoEmMillis(c){
+  const v = c.criadoEm;
+  if (!v) return 0;
+  if (typeof v.toMillis === 'function') return v.toMillis();
+  if (typeof v.seconds === 'number') return v.seconds * 1000;
+  const t = Date.parse(v);
+  return isNaN(t) ? 0 : t;
+}
+
+// aplica busca + filtro de comunidade + ordenação e retorna a lista resultante
 function filtrarCadastros(){
   const raw = $('#filtro').value.trim().toLowerCase();
   const dig = onlyDigits($('#filtro').value);
   const comFiltro = $('#filtroComunidade').value;
-  return CADASTROS.filter(c => {
+  const ordem = $('#ordenar').value;
+  const lista = CADASTROS.filter(c => {
     if (comFiltro && c.comunidade !== comFiltro) return false;
     if (!raw) return true;
     const porNome = (c.nome || '').toLowerCase().includes(raw);
@@ -151,6 +164,10 @@ function filtrarCadastros(){
     const porCpf = dig.length > 0 && c.id.includes(dig);
     return porNome || porCom || porCpf;
   });
+  if (ordem === 'recentes') lista.sort((a, b) => criadoEmMillis(b) - criadoEmMillis(a));
+  else if (ordem === 'antigos') lista.sort((a, b) => criadoEmMillis(a) - criadoEmMillis(b));
+  else lista.sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt-BR'));
+  return lista;
 }
 
 function renderCadastros(){
@@ -396,7 +413,8 @@ const btnCriarAdm = $('#btnCriarAdm');
 btnCriarAdm.addEventListener('click', () => comCarregamento(btnCriarAdm, async () => {
   const email = $('#admEmail').value.trim();
   const senha = $('#admSenha').value;
-  const role = $('#admRole').value;
+  // Apenas o DEV pode definir o papel; para ADM comum força 'adm' (independente do que vier no DOM).
+  const role = (MEU.role === 'dev') ? $('#admRole').value : 'adm';
   if (!email || senha.length < 6){ toast('Informe e-mail e senha (mín. 6 caracteres).', 'warn'); return; }
 
   // Cria a conta num app secundário para NÃO deslogar o admin atual.

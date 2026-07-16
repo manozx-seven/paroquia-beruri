@@ -20,6 +20,32 @@
 
 ---
 
+## 2026-07-16 — Tela de orientações no "Esqueci minha senha" (spam)
+- **Arquivos:** `site/login.html`, `site/assets/js/login.js`, `site/assets/css/styles.css`
+- **O que mudou:** ao clicar em **"Esqueci minha senha"** (após enviar o link), em vez de só um toast,
+  o login troca para uma nova tela (`#viewEsqueci`) com **orientações**: mostra o e-mail para onde foi
+  enviado, instrui a **verificar a pasta de SPAM/Lixo eletrônico**, marcar **"Não é spam"** para os
+  próximos e-mails caírem na caixa de entrada, e clicar no link para cadastrar a nova senha. Tem um
+  botão **"Voltar à página inicial"** (→ `index.html`). Novo estilo `.orientacoes` no CSS.
+- **Motivo:** pedido do usuário para orientar sobre o e-mail cair no spam (o texto/remetente do
+  template já foi personalizado pelo próprio usuário no Console do Firebase).
+- **Status:** concluído.
+
+## 2026-07-16 — Papel só p/ DEV ao criar admin + ordenação de cadastros
+- **Arquivos:** `site/admin.html`, `site/assets/js/admin.js`
+- **Escolha ADM/DEV restrita ao DEV:** o seletor de papel (`#admRole`) começa **oculto**
+  (`class="hidden"`) e só é exibido para quem é **DEV** (`if (MEU.role === 'dev')`). Para
+  administrador comum, ao criar conta, o papel é **forçado para `adm`** no JS
+  (`role = MEU.role === 'dev' ? select.value : 'adm'`), independente do DOM — ADM não cria DEV.
+- **Ordenação na aba Cadastros:** novo `select #ordenar` com **Nome (A–Z)**, **Mais recentes**
+  e **Mais antigos**. A ordem é aplicada em `filtrarCadastros()` (afeta lista **e** exportações),
+  usando helper `criadoEmMillis()` que entende `Timestamp` do Firestore, `{seconds}` e string.
+  Removida a ordenação fixa por nome que havia em `carregarCadastros()`.
+- **Motivo:** pedidos do usuário: só o dev escolhe o papel; poder ver os cadastros do mais recente.
+- **Status:** concluído.
+- **Pendente (usuário):** personalizar template de e-mail "redefinir senha" no Firebase (em PT-BR)
+  e reduzir chance de cair no SPAM — ver orientações passadas nesta sessão.
+
 ## 2026-07-15 — PONTO DE PARADA da sessão
 - **Onde paramos:** sistema novo (site `site/` + Firebase) funcional e publicado; **20 cadastros da
   planilha já migrados** para o Firestore. Repositório GitHub em dia (branch `main` sincronizada).

@@ -19,20 +19,29 @@ btnEntrar.addEventListener('click', () => comCarregamento(btnEntrar, entrar));
 document.getElementById('senha').addEventListener('keydown', e => { if (e.key === 'Enter') comCarregamento(btnEntrar, entrar); });
 btnSalvarSenha.addEventListener('click', () => comCarregamento(btnSalvarSenha, salvarSenha));
 
-// Esqueci minha senha → envia link de redefinição por e-mail
+// Esqueci minha senha → envia link de redefinição e mostra a tela de orientações
 const linkEsqueci = document.getElementById('linkEsqueci');
+const viewEsqueci = document.getElementById('viewEsqueci');
 linkEsqueci.addEventListener('click', () => comCarregamento(linkEsqueci, async () => {
   const email = document.getElementById('email').value.trim();
   if (!email){ toast('Digite seu e-mail no campo acima primeiro.', 'warn'); return; }
   try {
     await sendPasswordResetEmail(auth, email);
-    toast('Enviamos um link de redefinição para o seu e-mail. Verifique também o spam.', 'ok', 7000);
+    document.getElementById('esqueciEmail').textContent = email;
+    viewLogin.classList.add('hidden');
+    viewEsqueci.classList.remove('hidden');
+    viewEsqueci.classList.add('fade-in');
   } catch (e){
     console.error(e);
     const map = { 'auth/invalid-email': 'E-mail inválido.', 'auth/user-not-found': 'E-mail não encontrado.' };
     toast(map[e.code] || 'Não foi possível enviar o e-mail. Tente novamente.', 'erro');
   }
 }));
+
+// Botão "Voltar à página inicial" da tela de orientações
+document.getElementById('btnVoltarInicio').addEventListener('click', () => {
+  location.href = './index.html';
+});
 
 // ---- Regras de senha (lista visual + validação ao vivo) ----
 const listaRegras = document.getElementById('regrasSenha');
