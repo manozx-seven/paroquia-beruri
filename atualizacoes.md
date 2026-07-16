@@ -20,6 +20,30 @@
 
 ---
 
+## 2026-07-16 — Reiniciar senha de admin + vincular conta de login já existente
+- **Arquivos:** `site/assets/js/admin.js`, `site/assets/css/styles.css`
+- **Reiniciar senha (aba Administradores):** botão **"Reiniciar senha"** em cada admin.
+  - **Regra de permissão:** ADM e DEV reiniciam a senha de um **ADM**; **só DEV** reinicia a de um
+    **DEV**; ninguém reinicia a própria por ali (usar "alterar minha senha" nas Configurações).
+  - **Como funciona:** envia `sendPasswordResetEmail` para o e-mail do admin **e** marca
+    `mustChangePassword=true`. Assim, ao entrar, ele é obrigado a cadastrar uma nova senha forte
+    (mesmo fluxo do primeiro acesso). Nova ação no histórico: **reset_senha** (ponto ciano).
+  - **Limitação (por quê assim):** trocar a senha de OUTRA conta diretamente exigiria o **Admin SDK**
+    (servidor/Cloud Functions), que o projeto não tem. Pelo cliente, o caminho seguro é o e-mail de
+    redefinição + a flag de troca obrigatória.
+- **Correção "e-mail já está em uso" ao recriar admin:** o botão **Criar administrador** agora, se o
+  e-mail **já existe no Firebase Authentication** (`auth/email-already-in-use`), tenta **entrar** com a
+  senha informada e, dando certo, **vincula** essa conta de login ao sistema (cria o doc em `admins/`
+  com `mustChangePassword=true`). Resolve o caso: conta criada direto no Console, ou sobra de um admin
+  excluído do sistema mas não do Auth. Se a senha não confere, mostra orientação clara.
+  - **Raiz do problema relatado:** excluir um admin **no sistema** NÃO apaga a **conta de login** no
+    Firebase Authentication (isso exige Admin SDK). Ao recriar o mesmo e-mail, o "Criar" tentava criar
+    uma conta nova e batia em "e-mail em uso". Agora ele vincula a conta existente.
+  - **Fluxo recomendado:** para criar admin, usar **só o painel** (ele cria login + registro juntos);
+    não precisa mexer no Console. Para remover de vez, excluir no painel **e** no Authentication.
+- **Motivo:** pedidos do usuário: reiniciar senha de admins e resolver o "e-mail já em uso".
+- **Status:** concluído (código). Não exigiu mudança nas regras do Firestore.
+
 ## 2026-07-16 — PONTO DE PARADA da sessão
 - **Onde paramos:** todas as mudanças pedidas nesta sessão foram implementadas, commitadas e
   enviadas ao GitHub (`main`, último commit da feature de auditoria: `bfb5edd`). Netlify publica

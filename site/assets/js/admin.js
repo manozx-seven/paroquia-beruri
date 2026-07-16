@@ -2,8 +2,8 @@ import { app, auth, db, firebaseConfig, COL_CADASTROS, COL_ADMINS, COL_ATIVIDADE
 import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   onAuthStateChanged, signOut, getAuth,
-  createUserWithEmailAndPassword, signOut as signOutApp,
-  updatePassword, reauthenticateWithCredential, EmailAuthProvider
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut as signOutApp,
+  updatePassword, reauthenticateWithCredential, EmailAuthProvider, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp,
@@ -24,6 +24,7 @@ const HEARTBEAT_MS = 60 * 1000;    // atualiza o "ativo agora" a cada 1 min
 
 const IC_EDIT = '<svg class="ic ic-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
 const IC_TRASH = '<svg class="ic ic-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg>';
+const IC_KEY = '<svg class="ic ic-sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m10.7 12.3 7.8-7.8"/><path d="m16 6 2 2"/><path d="m18.5 3.5 2 2"/></svg>';
 
 const $ = (s) => document.querySelector(s);
 const carregando = $('#carregando');
@@ -433,6 +434,9 @@ async function carregarAdmins(){
     const souEu = a.id === MEU.uid;
     // permissão de excluir: não a si mesmo; dev exclui qualquer um; adm só exclui 'adm'
     const podeExcluir = !souEu && (MEU.role === 'dev' || (MEU.role === 'adm' && !ehDev));
+    // permissão de reiniciar senha: não a si mesmo (use "alterar minha senha");
+    // dev reinicia qualquer um; adm só reinicia quem NÃO é dev.
+    const podeResetar = !souEu && (MEU.role === 'dev' || !ehDev);
     const online = estaOnline(a);
     const statusHtml = online
       ? '<span class="status-online">online agora</span>'
@@ -446,12 +450,16 @@ async function carregarAdmins(){
           ${souEu ? '<span class="muted">(você)</span>' : ''}
           ${a.mustChangePassword ? '<span class="muted">• senha provisória</span>' : ''}
         </div>
-        ${podeExcluir ? `<button class="btn-sm btn-danger" data-deladm="${a.id}">${IC_TRASH} Excluir</button>` : ''}
+        <div class="card-actions">
+          ${podeResetar ? `<button class="btn-sm btn-ghost" data-resetadm="${a.id}">${IC_KEY} Reiniciar senha</button>` : ''}
+          ${podeExcluir ? `<button class="btn-sm btn-danger" data-deladm="${a.id}">${IC_TRASH} Excluir</button>` : ''}
+        </div>
       </div>
       <p style="margin:6px 0 0">${statusHtml}</p>`;
     box.appendChild(card);
   });
   box.querySelectorAll('[data-deladm]').forEach(b => b.addEventListener('click', () => excluirAdmin(b.dataset.deladm, b)));
+  box.querySelectorAll('[data-resetadm]').forEach(b => b.addEventListener('click', () => resetarSenhaAdmin(b.dataset.resetadm, b)));
 }
 
 async function excluirAdmin(uid, btn){
@@ -468,6 +476,33 @@ async function excluirAdmin(uid, btn){
   });
 }
 
+// Reinicia a senha de outro admin: envia e-mail de redefinição e marca "trocar no 1º acesso".
+// (Trocar a senha de outra conta diretamente exigiria o Admin SDK/servidor; via cliente, o caminho
+//  seguro é o e-mail de redefinição + a flag mustChangePassword.)
+async function resetarSenhaAdmin(uid, btn){
+  const alvo = ADMINS.find(x => x.id === uid);
+  if (!alvo) return;
+  if (!confirm(`Reiniciar a senha de ${alvo.email}?\n\nEle receberá um e-mail para definir uma nova senha e, ao entrar, será obrigado a cadastrar uma nova senha (como no primeiro acesso).`)) return;
+  await comCarregamento(btn, async () => {
+    try {
+      await sendPasswordResetEmail(auth, alvo.email);
+      await updateDoc(doc(db, COL_ADMINS, uid), { mustChangePassword: true });
+      registrarAtividade('reset_senha', `Reiniciou a senha de ${alvo.email}`);
+      toast('E-mail de redefinição enviado. Ao entrar, ele terá que cadastrar uma nova senha.', 'ok', 7000);
+      toast('Peça para verificar o SPAM e marcar "não é spam".', 'info', 8000);
+      await carregarAdmins();
+    } catch (e){
+      console.error(e);
+      const map = {
+        'auth/invalid-email': 'E-mail inválido.',
+        'auth/user-not-found': 'Conta de login não encontrada no Firebase Authentication.',
+        'auth/too-many-requests': 'Muitas tentativas. Aguarde um pouco e tente de novo.'
+      };
+      toast(map[e.code] || 'Não foi possível reiniciar a senha.', 'erro');
+    }
+  });
+}
+
 const btnCriarAdm = $('#btnCriarAdm');
 btnCriarAdm.addEventListener('click', () => comCarregamento(btnCriarAdm, async () => {
   const email = $('#admEmail').value.trim();
@@ -480,24 +515,38 @@ btnCriarAdm.addEventListener('click', () => comCarregamento(btnCriarAdm, async (
   const secApp = initializeApp(firebaseConfig, 'sec_' + email);
   const secAuth = getAuth(secApp);
   try {
-    const cred = await createUserWithEmailAndPassword(secAuth, email, senha);
+    let cred, vinculado = false;
+    try {
+      cred = await createUserWithEmailAndPassword(secAuth, email, senha);
+    } catch (e){
+      // Já existe uma CONTA DE LOGIN com esse e-mail no Firebase Authentication
+      // (ex.: criada direto no Console, ou sobra de um admin excluído do sistema mas não do Auth).
+      // Tenta entrar com a senha informada para obter o uid e VINCULAR essa conta ao sistema.
+      if (e.code === 'auth/email-already-in-use'){
+        cred = await signInWithEmailAndPassword(secAuth, email, senha)
+          .catch(() => { throw { code: 'login-existe-senha-errada' }; });
+        vinculado = true;
+      } else { throw e; }
+    }
     // grava o doc do admin usando a sessão atual (com permissão)
     await setDoc(doc(db, COL_ADMINS, cred.user.uid), {
       email, role, mustChangePassword: true, criadoEm: serverTimestamp()
     });
     await signOutApp(secAuth);
     $('#admEmail').value = ''; $('#admSenha').value = '';
-    registrarAtividade('criar_admin', `Criou o administrador ${email} (${role === 'dev' ? 'DEV' : 'ADM'})`);
-    toast('Administrador criado! Ele trocará a senha no primeiro acesso.', 'ok', 6000);
+    registrarAtividade('criar_admin', `${vinculado ? 'Vinculou' : 'Criou'} o administrador ${email} (${role === 'dev' ? 'DEV' : 'ADM'})`);
+    toast(vinculado
+      ? 'Conta de login já existia e foi vinculada ao sistema. Ele trocará a senha no primeiro acesso.'
+      : 'Administrador criado! Ele trocará a senha no primeiro acesso.', 'ok', 7000);
     await carregarAdmins();
   } catch (e){
     console.error(e);
     const map = {
-      'auth/email-already-in-use': 'Este e-mail já está em uso.',
       'auth/invalid-email': 'E-mail inválido.',
-      'auth/weak-password': 'Senha muito fraca (mín. 6 caracteres).'
+      'auth/weak-password': 'Senha muito fraca (mín. 6 caracteres).',
+      'login-existe-senha-errada': 'Este e-mail já tem uma conta de login, mas a senha informada não confere com ela. Digite a senha atual dessa conta para vinculá-la, ou apague-a no Firebase Authentication e crie de novo.'
     };
-    toast(map[e.code] || 'Erro ao criar administrador.', 'erro');
+    toast(map[e.code] || 'Erro ao criar administrador.', 'erro', 9000);
   } finally {
     try { await deleteApp(secApp); } catch (_){}
   }

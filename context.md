@@ -160,8 +160,18 @@ Paroquiano/Admin → site estático (Netlify, pasta site/)
   ultimoAcesso, ultimoAtivo }`. `ultimoAcesso` = última abertura do painel; `ultimoAtivo` = heartbeat
   (usado para "online agora": ativo nos últimos 2 min).
 - **`atividades/{autoId}`** (auditoria): `{ uid, email, role, acao, descricao, quando }`. `acao` ∈
-  {login, editar_cadastro, excluir_cadastro, editar_config, criar_admin, excluir_admin, alterar_senha}.
-  Regras: admin lê; cria só em nome do próprio uid; imutável; só DEV apaga. Exibida na aba **Histórico**.
+  {login, editar_cadastro, excluir_cadastro, editar_config, criar_admin, excluir_admin, alterar_senha,
+  reset_senha}. Regras: admin lê; cria só em nome do próprio uid; imutável; só DEV apaga. Aba **Histórico**.
+
+### Gestão de administradores (limitações do cliente)
+- **Criar admin (painel):** cria a conta de login (Auth) + o doc `admins/`. Se o e-mail **já existe no
+  Auth**, o painel tenta **entrar** com a senha informada e **vincula** a conta ao sistema (útil para
+  contas criadas no Console ou sobras de admins excluídos). Só o **DEV** escolhe o papel (ADM/DEV).
+- **Reiniciar senha (painel):** envia e-mail de redefinição + marca `mustChangePassword=true` (força
+  nova senha ao entrar, como no 1º acesso). ADM/DEV reiniciam ADM; só DEV reinicia DEV.
+- **Excluir admin (painel):** remove só o doc `admins/`; a **conta de login no Authentication permanece**
+  (apagar direto no Console). Excluir a conta do Auth e trocar a senha de OUTRO usuário exigem o
+  **Admin SDK** (Cloud Functions) — não implementado. Ideia futura registrada.
 
 ### Papéis e permissões (regras em `firestore.rules`)
 - **Público:** pode criar cadastro (create, não sobrescreve existente) e fazer `get` de um cadastro por CPF

@@ -222,6 +222,7 @@ button:disabled{filter:grayscale(.3) opacity(.6);cursor:not-allowed;transform:no
 .log-excluir{background:#c0392b}
 .log-criar{background:#12855a}
 .log-alterar{background:#7a4fd6}
+.log-reset{background:#0a97a8}
 .log-body{min-width:0}
 
 /* ===================== Admin ===================== */
