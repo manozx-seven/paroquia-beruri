@@ -20,6 +20,25 @@
 
 ---
 
+## 2026-07-16 — PONTO DE PARADA da sessão
+- **Onde paramos:** todas as mudanças pedidas nesta sessão foram implementadas, commitadas e
+  enviadas ao GitHub (`main`, último commit da feature de auditoria: `bfb5edd`). Netlify publica
+  automaticamente a partir do `main`.
+- **Feito nesta sessão (resumo):**
+  1. Tela de orientações no "Esqueci minha senha" (verificar spam / marcar "não é spam" + voltar ao início).
+  2. Seletor de papel ADM/DEV visível **só para o DEV**; ADM comum cria sempre `adm`.
+  3. Filtro de **ordenação** dos cadastros (Nome A–Z / Mais recentes / Mais antigos).
+  4. **Histórico de atividades** (nova aba + coleção `atividades`), **status online / último acesso**
+     dos admins e **data/hora de conclusão** do cadastro (na lista e nas exportações).
+- **⚠️ PENDÊNCIA DO USUÁRIO (única para o histórico funcionar):** publicar as regras atualizadas do
+  Firestore no Console (Firestore → Regras → colar `firestore.rules` → Publicar). O bloco novo é
+  `match /atividades/{id}`. Sem isso, o histórico dá erro de permissão (falha em silêncio, aba vazia).
+- **Decisão em aberto (registrada):** hoje o Histórico é visível a **todos os admins**; o usuário pode
+  pedir para restringir só ao DEV depois.
+- **Item do e-mail:** o usuário já personalizou texto/remetente do template no Firebase; orientação de
+  spam agora também aparece na tela do "Esqueci minha senha".
+- **Status:** sessão encerrada a pedido do usuário.
+
 ## 2026-07-16 — Histórico de atividades (auditoria) + presença online + data/hora do cadastro
 - **Arquivos:** `site/admin.html`, `site/assets/js/admin.js`, `site/assets/js/utils.js`,
   `site/assets/js/firebase.js`, `site/assets/css/styles.css`, `firestore.rules`
