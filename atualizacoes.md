@@ -20,6 +20,29 @@
 
 ---
 
+## 2026-07-16 — PONTO DE PARADA (fim da 2ª sessão do dia)
+- **Onde paramos:** todas as mudanças pedidas foram implementadas, commitadas e enviadas ao GitHub
+  (`main`, último commit `f0558fd`). Netlify publica automaticamente. Nada pendente de código.
+- **Feito nesta continuação (resumo, mais recente → antigo):**
+  1. **Reiniciar senha de admin** (aba Administradores): ADM/DEV reiniciam ADM; só DEV reinicia DEV;
+     não a si mesmo. Envia e-mail de redefinição + marca `mustChangePassword` (força nova senha ao
+     entrar). Nova ação no histórico: **reset_senha**.
+  2. **Correção "e-mail já em uso"**: ao criar admin, se o e-mail já existe no Authentication, o
+     painel entra com a senha informada e **vincula** a conta ao sistema (resolve recriar admin que
+     foi excluído do sistema mas não do Auth). Fluxo recomendado: criar admin só pelo painel.
+  3. **Decisão confirmada (não é bug):** após reiniciar, a senha atual do usuário vale por 1 login e
+     ele é forçado a trocar (tela de 1º acesso). Invalidar na hora exigiria Admin SDK — ficou como
+     ideia futura.
+  4. (Antes, na mesma leva) **Histórico de auditoria**, **online/último acesso**, **data/hora do
+     cadastro**, **ordenação de cadastros**, **papel ADM/DEV só para o DEV** e **tela de orientações
+     de spam no "Esqueci minha senha"** — todos testados e funcionando.
+- **Testes:** histórico testado no navegador pelo usuário — funcionou tudo. Regras do Firestore da
+  coleção `atividades` já publicadas no Console.
+- **Pendências / ideias futuras registradas:** Cloud Functions/Admin SDK para (a) apagar a conta do
+  Authentication ao remover admin e (b) invalidar a senha na hora ao reiniciar. Opcional: restringir a
+  aba **Histórico** só ao DEV (hoje todos os admins veem).
+- **Status:** sessão encerrada a pedido do usuário.
+
 ## 2026-07-16 — Reiniciar senha de admin + vincular conta de login já existente
 - **Arquivos:** `site/assets/js/admin.js`, `site/assets/css/styles.css`
 - **Reiniciar senha (aba Administradores):** botão **"Reiniciar senha"** em cada admin.
