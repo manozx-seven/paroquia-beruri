@@ -43,6 +43,12 @@
     não precisa mexer no Console. Para remover de vez, excluir no painel **e** no Authentication.
 - **Motivo:** pedidos do usuário: reiniciar senha de admins e resolver o "e-mail já em uso".
 - **Status:** concluído (código). Não exigiu mudança nas regras do Firestore.
+- **DECISÃO CONFIRMADA (não é bug):** após "Reiniciar senha", a **senha atual do usuário ainda vale
+  por 1 login**, mas ao entrar ele é **forçado a cadastrar uma nova senha** (tela de primeiro acesso).
+  Isso é intencional: `sendPasswordResetEmail` **não** invalida a senha atual (só o Admin SDK faria),
+  então usamos `mustChangePassword=true` para garantir a troca por qualquer caminho (lembrando a senha
+  atual OU pelo link do e-mail). O usuário optou por **manter esse comportamento**. Invalidar a senha
+  na hora ficaria para uma futura implementação com Cloud Functions/Admin SDK.
 
 ## 2026-07-16 — PONTO DE PARADA da sessão
 - **Onde paramos:** todas as mudanças pedidas nesta sessão foram implementadas, commitadas e
