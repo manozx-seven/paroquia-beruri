@@ -24,3 +24,5 @@ export const CONFIG_DOC = ["config", "listas"];
 export const COL_CADASTROS = "cadastros";
 // Coleção de administradores (id do documento = uid do Auth).
 export const COL_ADMINS = "admins";
+// Coleção de histórico/auditoria das ações dos administradores.
+export const COL_ATIVIDADES = "atividades";

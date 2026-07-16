@@ -126,9 +126,12 @@ Paroquiano/Admin → site estático (Netlify, pasta site/)
 - `cadastro.html` + `assets/js/cadastro.js` — formulário. CPF é o 1º campo; se já cadastrado, trava tudo.
 - `verificar.html` — busca por CPF + Data de Nascimento; botão de mudança → WhatsApp do pároco.
 - `login.html` + `assets/js/login.js` — login; primeiro acesso força troca de senha.
-- `admin.html` + `assets/js/admin.js` — painel (abas Cadastros, Configurações, Administradores).
-  Aba Cadastros tem **exportação Excel/PDF** (SheetJS + jsPDF/autotable via CDN), respeitando o
-  filtro de comunidade/busca (todas ou por comunidade).
+- `admin.html` + `assets/js/admin.js` — painel (abas **Cadastros, Configurações, Administradores,
+  Histórico**). Aba Cadastros tem filtro de **ordenação** (Nome A–Z / Mais recentes / Mais antigos),
+  mostra a **data/hora de conclusão** de cada cadastro e tem **exportação Excel/PDF** (SheetJS +
+  jsPDF/autotable via CDN), respeitando o filtro de comunidade/busca. Aba **Histórico** mostra a
+  auditoria das ações dos admins. Aba **Administradores** mostra **status online / último acesso**.
+  Só o **DEV** vê o seletor de papel (ADM/DEV) ao criar administrador.
 - `assets/js/firebase.js` — init + config (já com as chaves do projeto paroquia-beruri).
 - `assets/js/utils.js` — máscaras (CPF/celular), validação de CPF, toast, selects, WhatsApp,
   **`comCarregamento(btn, fn)`** (loader `ldrs` no botão + bloqueio de clique duplo) e `REGRAS_SENHA`.
@@ -153,7 +156,12 @@ Paroquiano/Admin → site estático (Netlify, pasta site/)
   `{ cpf, nome, celular, nascimento (yyyy-mm-dd), comunidade, funcaoComunidade,
      pastorais:[{nome,funcao}], criadoEm, atualizadoEm }`.
 - **`config/listas`** (doc único): `{ comunidades:[], pastorais:[], funcoes:[] }` — editável na aba Configurações.
-- **`admins/{uid}`** (id = uid do Authentication): `{ email, role:'adm'|'dev', mustChangePassword, criadoEm }`.
+- **`admins/{uid}`** (id = uid do Authentication): `{ email, role:'adm'|'dev', mustChangePassword, criadoEm,
+  ultimoAcesso, ultimoAtivo }`. `ultimoAcesso` = última abertura do painel; `ultimoAtivo` = heartbeat
+  (usado para "online agora": ativo nos últimos 2 min).
+- **`atividades/{autoId}`** (auditoria): `{ uid, email, role, acao, descricao, quando }`. `acao` ∈
+  {login, editar_cadastro, excluir_cadastro, editar_config, criar_admin, excluir_admin, alterar_senha}.
+  Regras: admin lê; cria só em nome do próprio uid; imutável; só DEV apaga. Exibida na aba **Histórico**.
 
 ### Papéis e permissões (regras em `firestore.rules`)
 - **Público:** pode criar cadastro (create, não sobrescreve existente) e fazer `get` de um cadastro por CPF

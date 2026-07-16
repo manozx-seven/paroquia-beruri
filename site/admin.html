@@ -29,6 +29,7 @@
       <button class="tab active" data-tab="cadastros">Cadastros</button>
       <button class="tab" data-tab="config">Configurações</button>
       <button class="tab" data-tab="admins">Administradores</button>
+      <button class="tab" data-tab="historico">Histórico</button>
     </div>
 
     <div id="carregando" class="loading show"><l-dot-wave size="40" speed="1" color="#3d3f95"></l-dot-wave><span>Carregando...</span></div>
@@ -118,6 +119,22 @@
         <p class="muted">No primeiro acesso, o sistema pedirá que ele cadastre uma nova senha.</p>
       </div>
       <div id="listaAdmins"></div>
+    </section>
+
+    <!-- ABA HISTÓRICO -->
+    <section id="tab-historico" class="tabpane hidden">
+      <div class="topbar">
+        <p class="muted" style="margin:0">Registro das ações feitas pelos administradores no painel.</p>
+        <button id="btnAtualizarHist" class="btn-sm btn-ghost">
+          <svg class="ic ic-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+          Atualizar
+        </button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <input type="text" id="filtroHist" placeholder="Filtrar por administrador ou ação..." />
+      </div>
+      <p class="muted" id="contadorHist"></p>
+      <div id="listaAtividades"></div>
     </section>
   </div>
 

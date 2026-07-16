@@ -1,4 +1,4 @@
-import { app, auth, db, firebaseConfig, COL_CADASTROS, COL_ADMINS, CONFIG_DOC } from './firebase.js';
+import { app, auth, db, firebaseConfig, COL_CADASTROS, COL_ADMINS, COL_ATIVIDADES, CONFIG_DOC } from './firebase.js';
 import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   onAuthStateChanged, signOut, getAuth,
@@ -6,16 +6,21 @@ import {
   updatePassword, reauthenticateWithCredential, EmailAuthProvider
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp
+  collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp,
+  addDoc, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
-  formatarCPF, dataBR, toast, preencherSelect, onlyDigits, comCarregamento,
-  REGRAS_SENHA, validarSenhaForte, olhoSenhaEm
+  formatarCPF, dataBR, dataHoraBR, tempoRelativo, paraData, toast, preencherSelect,
+  onlyDigits, comCarregamento, REGRAS_SENHA, validarSenhaForte, olhoSenhaEm
 } from './utils.js';
 
 let MEU = { uid: null, email: null, role: null };
 let LISTAS = { comunidades: [], pastorais: [], funcoes: [] };
 let CADASTROS = []; // {id, ...dados}
+let ATIVIDADES = []; // {id, uid, email, role, acao, descricao, quando}
+
+const ONLINE_MS = 2 * 60 * 1000;   // considerado "online" se ativo nos últimos 2 min
+const HEARTBEAT_MS = 60 * 1000;    // atualiza o "ativo agora" a cada 1 min
 
 const IC_EDIT = '<svg class="ic ic-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
 const IC_TRASH = '<svg class="ic ic-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg>';
@@ -35,7 +40,9 @@ onAuthStateChanged(auth, async (user) => {
     $('#quemSou').innerHTML = `${MEU.email} <span class="badge ${MEU.role}">${MEU.role === 'dev' ? 'DEV' : 'ADM'}</span>`;
     // Só o DEV pode escolher o papel (ADM/DEV) ao criar conta; ADM comum só cria administrador.
     if (MEU.role === 'dev') $('#admRole').classList.remove('hidden');
+    await marcarAcesso();          // último acesso + presença + registra "entrou no painel"
     await carregarTudo();
+    iniciarPresenca();             // heartbeat: mantém "ativo agora" atualizado
   } catch (e){
     console.error(e); toast('Erro ao carregar o painel.', 'erro');
   }
@@ -56,9 +63,50 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
 
 async function carregarTudo(){
   carregando.classList.add('show');
-  await Promise.all([carregarListas(), carregarCadastros(), carregarAdmins()]);
+  await Promise.all([carregarListas(), carregarCadastros(), carregarAdmins(), carregarAtividades()]);
   carregando.classList.remove('show');
   $('#tab-cadastros').classList.remove('hidden');
+}
+
+// ---------- Auditoria / presença ----------
+// Registra uma atividade no histórico (nunca quebra a ação principal se o log falhar).
+async function registrarAtividade(acao, descricao){
+  try {
+    await addDoc(collection(db, COL_ATIVIDADES), {
+      uid: MEU.uid, email: MEU.email, role: MEU.role,
+      acao, descricao: descricao || '', quando: serverTimestamp()
+    });
+  } catch (e){ console.warn('Falha ao registrar atividade:', e); }
+}
+
+// Marca o último acesso + presença ao abrir o painel e registra a entrada.
+// O registro de "Entrou no painel" acontece só 1x por sessão do navegador
+// (recarregar a página não gera um novo registro, mas o último acesso é sempre atualizado).
+async function marcarAcesso(){
+  try {
+    await updateDoc(doc(db, COL_ADMINS, MEU.uid), {
+      ultimoAcesso: serverTimestamp(), ultimoAtivo: serverTimestamp()
+    });
+  } catch (e){ console.warn('Falha ao marcar acesso:', e); }
+  try {
+    if (!sessionStorage.getItem('logou')){
+      await registrarAtividade('login', 'Entrou no painel');
+      sessionStorage.setItem('logou', '1');
+    }
+  } catch { await registrarAtividade('login', 'Entrou no painel'); }
+}
+
+// Heartbeat: mantém "ativo agora" atualizado enquanto o painel está aberto.
+function iniciarPresenca(){
+  const bater = () => updateDoc(doc(db, COL_ADMINS, MEU.uid), { ultimoAtivo: serverTimestamp() }).catch(() => {});
+  setInterval(bater, HEARTBEAT_MS);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) bater(); });
+}
+
+// "online" se o último sinal de atividade foi há menos de ONLINE_MS.
+function estaOnline(a){
+  const d = paraData(a.ultimoAtivo);
+  return !!d && (Date.now() - d.getTime()) < ONLINE_MS;
 }
 
 // ---------- Listas / Configurações ----------
@@ -125,6 +173,7 @@ async function salvarListas(){
     renderConfig();
     preencherSelect($('#filtroComunidade'), LISTAS.comunidades, { placeholder: 'Todas as comunidades' });
     $('#filtroComunidade').querySelector('option').disabled = false;
+    registrarAtividade('editar_config', 'Atualizou as listas (comunidades / pastorais / funções)');
     toast('Configurações salvas.', 'ok');
   } catch (e){ console.error(e); toast('Erro ao salvar. Verifique sua permissão.', 'erro'); }
 }
@@ -140,14 +189,10 @@ $('#filtro').addEventListener('input', renderCadastros);
 $('#filtroComunidade').addEventListener('change', renderCadastros);
 $('#ordenar').addEventListener('change', renderCadastros);
 
-// Converte o campo criadoEm (Timestamp do Firestore, {seconds}, ou string) em milissegundos p/ ordenar.
+// Milissegundos do campo criadoEm (Timestamp do Firestore, {seconds}, Date ou string) p/ ordenar.
 function criadoEmMillis(c){
-  const v = c.criadoEm;
-  if (!v) return 0;
-  if (typeof v.toMillis === 'function') return v.toMillis();
-  if (typeof v.seconds === 'number') return v.seconds * 1000;
-  const t = Date.parse(v);
-  return isNaN(t) ? 0 : t;
+  const d = paraData(c.criadoEm);
+  return d ? d.getTime() : 0;
 }
 
 // aplica busca + filtro de comunidade + ordenação e retorna a lista resultante
@@ -192,7 +237,10 @@ function renderCadastros(){
         <strong>Cel:</strong> ${c.celular || '—'} &nbsp;•&nbsp;
         <strong>Nasc.:</strong> ${dataBR(c.nascimento)}</p>
       <p style="margin:4px 0"><strong>${c.comunidade || '—'}</strong> — ${c.funcaoComunidade || '—'}</p>
-      <p style="margin:4px 0"><strong>Pastorais:</strong> ${past}</p>`;
+      <p style="margin:4px 0"><strong>Pastorais:</strong> ${past}</p>
+      <p class="muted" style="margin:4px 0;font-size:12.5px">
+        <svg class="ic ic-sm" viewBox="0 0 24 24" aria-hidden="true" style="vertical-align:-3px"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        Cadastro concluído em ${dataHoraBR(c.criadoEm)}</p>`;
     box.appendChild(card);
   });
 
@@ -208,6 +256,7 @@ async function excluirCadastro(id, btn){
       await deleteDoc(doc(db, COL_CADASTROS, id));
       CADASTROS = CADASTROS.filter(x => x.id !== id);
       renderCadastros();
+      registrarAtividade('excluir_cadastro', `Excluiu o cadastro de ${c?.nome || formatarCPF(id)}`);
       toast('Cadastro excluído.', 'ok');
     } catch (e){ console.error(e); toast('Erro ao excluir.', 'erro'); }
   });
@@ -293,6 +342,7 @@ btnModalSalvar.addEventListener('click', () => comCarregamento(btnModalSalvar, a
     if (i >= 0) CADASTROS[i] = { ...CADASTROS[i], ...dados };
     modal.classList.add('hidden');
     renderCadastros();
+    registrarAtividade('editar_cadastro', `Editou o cadastro de ${dados.nome || formatarCPF(editId)}`);
     toast('Cadastro atualizado.', 'ok');
   } catch (e){ console.error(e); toast('Erro ao salvar. Verifique sua permissão.', 'erro'); }
 }));
@@ -316,13 +366,13 @@ function exportarExcel(){
   if (!window.XLSX){ toast('Biblioteca de Excel não carregou. Recarregue a página.', 'erro'); return; }
 
   const maxPast = Math.max(1, ...lista.map(c => (c.pastorais || []).length));
-  const header = ['Nome', 'CPF', 'Celular', 'Data de Nascimento', 'Comunidade', 'Função na Comunidade'];
+  const header = ['Nome', 'CPF', 'Celular', 'Data de Nascimento', 'Comunidade', 'Função na Comunidade', 'Cadastrado em'];
   for (let i = 1; i <= maxPast; i++) header.push(`Pastoral ${i}`, `Função ${i}`);
 
   const aoa = [header];
   lista.forEach(c => {
     const row = [c.nome || '', formatarCPF(c.id), c.celular || '', dataBR(c.nascimento),
-      c.comunidade || '', c.funcaoComunidade || ''];
+      c.comunidade || '', c.funcaoComunidade || '', dataHoraBR(c.criadoEm)];
     for (let i = 0; i < maxPast; i++){
       const p = (c.pastorais || [])[i];
       row.push(p ? p.nome : '', p ? p.funcao : '');
@@ -350,17 +400,17 @@ function exportarPdf(){
   docp.setFontSize(13); docp.text(titulo, 14, 13);
   docp.setFontSize(9); docp.setTextColor(90); docp.text(sub, 14, 19); docp.setTextColor(0);
 
-  const head = [['Nome', 'CPF', 'Celular', 'Nascimento', 'Comunidade', 'Função Com.', 'Pastorais / Grupos (Função)']];
+  const head = [['Nome', 'CPF', 'Celular', 'Nascimento', 'Comunidade', 'Função Com.', 'Cadastrado em', 'Pastorais / Grupos (Função)']];
   const body = lista.map(c => [
     c.nome || '', formatarCPF(c.id), c.celular || '', dataBR(c.nascimento),
-    c.comunidade || '', c.funcaoComunidade || '',
+    c.comunidade || '', c.funcaoComunidade || '', dataHoraBR(c.criadoEm),
     (c.pastorais || []).map(p => `${p.nome} (${p.funcao})`).join('; ') || '—'
   ]);
   docp.autoTable({
     head, body, startY: 23,
     styles: { fontSize: 8, cellPadding: 1.6, overflow: 'linebreak' },
     headStyles: { fillColor: [63, 81, 181] },
-    columnStyles: { 6: { cellWidth: 85 } }
+    columnStyles: { 7: { cellWidth: 70 } }
   });
   docp.save(nomeArquivo('pdf'));
   toast(`PDF exportado: ${lista.length} cadastro(s).`, 'ok');
@@ -371,9 +421,11 @@ btnExcel.addEventListener('click', () => comCarregamento(btnExcel, async () => e
 btnPdf.addEventListener('click', () => comCarregamento(btnPdf, async () => exportarPdf()));
 
 // ---------- Administradores ----------
+let ADMINS = []; // cache dos administradores (para logs e status)
 async function carregarAdmins(){
   const qs = await getDocs(collection(db, COL_ADMINS));
   const admins = qs.docs.map(d => ({ id: d.id, ...d.data() }));
+  ADMINS = admins;
   const box = $('#listaAdmins'); box.innerHTML = '';
   admins.sort((a, b) => (a.email || '').localeCompare(b.email || ''));
   admins.forEach(a => {
@@ -381,6 +433,10 @@ async function carregarAdmins(){
     const souEu = a.id === MEU.uid;
     // permissão de excluir: não a si mesmo; dev exclui qualquer um; adm só exclui 'adm'
     const podeExcluir = !souEu && (MEU.role === 'dev' || (MEU.role === 'adm' && !ehDev));
+    const online = estaOnline(a);
+    const statusHtml = online
+      ? '<span class="status-online">online agora</span>'
+      : `<span class="muted">Último acesso: ${a.ultimoAcesso ? `${dataHoraBR(a.ultimoAcesso)} (${tempoRelativo(a.ultimoAcesso)})` : 'nunca acessou'}</span>`;
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
@@ -391,7 +447,8 @@ async function carregarAdmins(){
           ${a.mustChangePassword ? '<span class="muted">• senha provisória</span>' : ''}
         </div>
         ${podeExcluir ? `<button class="btn-sm btn-danger" data-deladm="${a.id}">${IC_TRASH} Excluir</button>` : ''}
-      </div>`;
+      </div>
+      <p style="margin:6px 0 0">${statusHtml}</p>`;
     box.appendChild(card);
   });
   box.querySelectorAll('[data-deladm]').forEach(b => b.addEventListener('click', () => excluirAdmin(b.dataset.deladm, b)));
@@ -399,9 +456,11 @@ async function carregarAdmins(){
 
 async function excluirAdmin(uid, btn){
   if (!confirm('Excluir este administrador? (O acesso dele será removido do sistema.)')) return;
+  const alvo = ADMINS.find(x => x.id === uid);
   await comCarregamento(btn, async () => {
     try {
       await deleteDoc(doc(db, COL_ADMINS, uid));
+      registrarAtividade('excluir_admin', `Removeu o administrador ${alvo?.email || uid}`);
       toast('Administrador removido do sistema.', 'ok', 6000);
       toast('Obs.: a conta de login continua no Firebase Auth até ser apagada no Console.', 'info', 8000);
       await carregarAdmins();
@@ -428,6 +487,7 @@ btnCriarAdm.addEventListener('click', () => comCarregamento(btnCriarAdm, async (
     });
     await signOutApp(secAuth);
     $('#admEmail').value = ''; $('#admSenha').value = '';
+    registrarAtividade('criar_admin', `Criou o administrador ${email} (${role === 'dev' ? 'DEV' : 'ADM'})`);
     toast('Administrador criado! Ele trocará a senha no primeiro acesso.', 'ok', 6000);
     await carregarAdmins();
   } catch (e){
@@ -442,6 +502,50 @@ btnCriarAdm.addEventListener('click', () => comCarregamento(btnCriarAdm, async (
     try { await deleteApp(secApp); } catch (_){}
   }
 }));
+
+// ---------- Histórico de atividades ----------
+async function carregarAtividades(){
+  try {
+    const q = query(collection(db, COL_ATIVIDADES), orderBy('quando', 'desc'), limit(300));
+    const qs = await getDocs(q);
+    ATIVIDADES = qs.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e){ console.error(e); ATIVIDADES = []; }
+  renderAtividades();
+}
+
+$('#filtroHist').addEventListener('input', renderAtividades);
+const btnAtualizarHist = $('#btnAtualizarHist');
+btnAtualizarHist.addEventListener('click', () => comCarregamento(btnAtualizarHist, async () => {
+  await Promise.all([carregarAtividades(), carregarAdmins()]);
+  toast('Histórico atualizado.', 'ok');
+}));
+
+function renderAtividades(){
+  const box = $('#listaAtividades'); box.innerHTML = '';
+  const termo = $('#filtroHist').value.trim().toLowerCase();
+  const lista = ATIVIDADES.filter(a => !termo
+    || (a.email || '').toLowerCase().includes(termo)
+    || (a.descricao || '').toLowerCase().includes(termo)
+    || (a.acao || '').toLowerCase().includes(termo));
+
+  $('#contadorHist').textContent = `${lista.length} registro(s).`;
+  if (!lista.length){ box.innerHTML = '<p class="muted">Nenhuma atividade registrada ainda.</p>'; return; }
+
+  lista.forEach(a => {
+    const ehDev = a.role === 'dev';
+    const item = document.createElement('div');
+    item.className = 'log-item';
+    item.innerHTML = `
+      <span class="log-dot log-${(a.acao || 'info').split('_')[0]}"></span>
+      <div class="log-body">
+        <p style="margin:0"><strong>${a.email || a.uid || '—'}</strong>
+          <span class="badge ${a.role || 'adm'}">${ehDev ? 'DEV' : 'ADM'}</span></p>
+        <p style="margin:2px 0">${a.descricao || a.acao || '—'}</p>
+        <p class="muted" style="margin:0;font-size:12px">${dataHoraBR(a.quando)} • ${tempoRelativo(a.quando)}</p>
+      </div>`;
+    box.appendChild(item);
+  });
+}
 
 // ---------- Alterar minha senha (aba Configurações) ----------
 const pwAtual = $('#pwAtual'), pwNova = $('#pwNova'), pwNova2 = $('#pwNova2');
@@ -475,6 +579,7 @@ btnTrocarSenha.addEventListener('click', () => comCarregamento(btnTrocarSenha, a
     await reauthenticateWithCredential(auth.currentUser, cred);
     await updatePassword(auth.currentUser, s1);
     pwAtual.value = ''; pwNova.value = ''; pwNova2.value = ''; avaliarPw();
+    registrarAtividade('alterar_senha', 'Alterou a própria senha');
     toast('Senha alterada com sucesso!', 'ok');
   } catch (e){
     console.error(e);

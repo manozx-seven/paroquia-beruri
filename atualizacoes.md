@@ -20,6 +20,29 @@
 
 ---
 
+## 2026-07-16 — Histórico de atividades (auditoria) + presença online + data/hora do cadastro
+- **Arquivos:** `site/admin.html`, `site/assets/js/admin.js`, `site/assets/js/utils.js`,
+  `site/assets/js/firebase.js`, `site/assets/css/styles.css`, `firestore.rules`
+- **Nova coleção `atividades`** (auditoria): cada ação de admin/dev grava um registro
+  `{uid, email, role, acao, descricao, quando}`. Ações registradas: **login** (entrar no painel),
+  **editar_cadastro**, **excluir_cadastro**, **editar_config**, **criar_admin**, **excluir_admin**,
+  **alterar_senha**. Helper `registrarAtividade(acao, descricao)` (falha em silêncio, não quebra a ação).
+  O login é registrado **1x por sessão** do navegador (`sessionStorage`) para não poluir com refresh.
+- **Nova aba "Histórico"** no painel: lista as atividades (mais recentes primeiro, limite 300),
+  com filtro por administrador/ação, botão **Atualizar** e contador. Estilos `.log-item`/`.log-dot`.
+- **Presença / último acesso:** campos novos em `admins/{uid}`: `ultimoAcesso` (atualizado a cada
+  abertura do painel) e `ultimoAtivo` (**heartbeat** a cada 1 min + no `visibilitychange`). Na aba
+  **Administradores**, cada admin mostra **"online agora"** (ativo nos últimos 2 min) ou o
+  **último acesso** (data/hora + "há X min"). Helpers `paraData`, `dataHoraBR`, `tempoRelativo` em `utils.js`.
+- **Data/hora do cadastro:** na aba **Cadastros**, cada card mostra **"Cadastro concluído em dd/mm/aaaa HH:MM"**
+  (campo `criadoEm`). Também adicionada a coluna **"Cadastrado em"** nas exportações **Excel** e **PDF**.
+- **Regras (`firestore.rules`):** coleção `atividades` → `read` p/ qualquer admin; `create` só do
+  próprio uid; `update` proibido (imutável); `delete` só DEV. **⚠️ Precisa PUBLICAR as regras no
+  Console do Firebase** para o histórico funcionar (senão dá erro de permissão).
+- **Motivo:** pedido do usuário: histórico das ações dos admins, último acesso/online e a data/hora
+  em que cada pessoa concluiu o cadastro.
+- **Status:** concluído (código). **Pendente do usuário:** publicar as novas regras do Firestore.
+
 ## 2026-07-16 — Tela de orientações no "Esqueci minha senha" (spam)
 - **Arquivos:** `site/login.html`, `site/assets/js/login.js`, `site/assets/css/styles.css`
 - **O que mudou:** ao clicar em **"Esqueci minha senha"** (após enviar o link), em vez de só um toast,

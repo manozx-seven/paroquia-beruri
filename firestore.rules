@@ -48,5 +48,16 @@ service cloud.firestore {
       // excluir: dev remove qualquer um; adm só remove quem tem role 'adm'.
       allow delete: if ehDev() || (ehAdmin() && resource.data.role == 'adm');
     }
+
+    // ---- Histórico de atividades (auditoria) ----
+    match /atividades/{id} {
+      // ler o histórico: qualquer administrador.
+      allow read: if ehAdmin();
+      // registrar uma atividade: só um admin, e apenas em nome do próprio uid.
+      allow create: if ehAdmin() && request.resource.data.uid == request.auth.uid;
+      // o histórico é imutável (não pode ser editado); o DEV pode apagar registros antigos.
+      allow update: if false;
+      allow delete: if ehDev();
+    }
   }
 }

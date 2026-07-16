@@ -55,6 +55,41 @@ export function dataBR(iso){
   return `${d}/${m}/${a}`;
 }
 
+// Converte um valor de data (Timestamp do Firestore, {seconds}, Date ou string ISO) em Date.
+export function paraData(v){
+  if (!v) return null;
+  if (v instanceof Date) return isNaN(v) ? null : v;
+  if (typeof v.toDate === 'function') { try { return v.toDate(); } catch { return null; } }
+  if (typeof v.seconds === 'number') return new Date(v.seconds * 1000);
+  const t = Date.parse(v);
+  return isNaN(t) ? null : new Date(t);
+}
+
+// Formata para "dd/mm/aaaa HH:MM" (pt-BR). Retorna '—' se não houver data.
+export function dataHoraBR(v){
+  const d = paraData(v);
+  if (!d) return '—';
+  return d.toLocaleString('pt-BR', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+  });
+}
+
+// "há X minutos/horas/dias" a partir de um valor de data. Retorna '' se não houver data.
+export function tempoRelativo(v){
+  const d = paraData(v);
+  if (!d) return '';
+  const seg = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (seg < 60) return 'agora mesmo';
+  const min = Math.floor(seg / 60);
+  if (min < 60) return `há ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `há ${h} h`;
+  const dias = Math.floor(h / 24);
+  if (dias === 1) return 'ontem';
+  if (dias < 30) return `há ${dias} dias`;
+  return dataHoraBR(d);
+}
+
 // Toast
 export function toast(msg, tipo = 'info', ms = 4000){
   let wrap = document.getElementById('toastWrap');
