@@ -7,7 +7,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp,
-  addDoc, query, orderBy, limit
+  addDoc, query, orderBy, limit, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   formatarCPF, dataBR, dataHoraBR, tempoRelativo, paraData, toast, preencherSelect,
@@ -44,6 +44,7 @@ onAuthStateChanged(auth, async (user) => {
     await marcarAcesso();          // último acesso + presença + registra "entrou no painel"
     await carregarTudo();
     iniciarPresenca();             // heartbeat: mantém "ativo agora" atualizado
+    vigiarMinhaConta();            // reage em tempo real a reset de senha / exclusão da própria conta
   } catch (e){
     console.error(e); toast('Erro ao carregar o painel.', 'erro');
   }
@@ -108,6 +109,33 @@ function iniciarPresenca(){
 function estaOnline(a){
   const d = paraData(a.ultimoAtivo);
   return !!d && (Date.now() - d.getTime()) < ONLINE_MS;
+}
+
+// ---------- Vigilância da própria conta (tempo real) ----------
+// Fica escutando o documento admins/{meu uid} via onSnapshot. Se OUTRO admin, com o painel
+// já aberto aqui, reiniciar minha senha (mustChangePassword=true) ou excluir meu acesso
+// (documento apagado), o navegador reage NA HORA — sem precisar dar F5 — e me manda para o login.
+let saindoForcado = false;
+function vigiarMinhaConta(){
+  onSnapshot(doc(db, COL_ADMINS, MEU.uid), (snap) => {
+    if (saindoForcado) return;
+    if (!snap.exists()){
+      forcarSaida('Seu acesso de administrador foi removido por outro administrador.');
+      return;
+    }
+    if (snap.data().mustChangePassword){
+      forcarSaida('Sua senha foi reiniciada. Entre novamente para cadastrar uma nova senha.');
+    }
+  }, (e) => console.warn('Vigilância da conta falhou:', e));
+}
+
+// Desloga e leva ao login, deixando um aviso para a tela de login explicar o motivo.
+async function forcarSaida(motivo){
+  saindoForcado = true;
+  try { sessionStorage.setItem('avisoLogin', motivo); } catch (_){}
+  toast(motivo, 'warn', 5000);
+  try { await signOut(auth); } catch (_){}
+  location.href = './login.html';
 }
 
 // ---------- Listas / Configurações ----------

@@ -20,6 +20,30 @@
 
 ---
 
+## 2026-07-16 — Efeito em tempo real: derruba a sessão ao reiniciar senha / excluir admin
+- **Arquivos:** `site/assets/js/admin.js`, `site/assets/js/login.js`
+- **Problema relatado:** ao reiniciar a senha (ou excluir) um admin que estava **com o painel aberto**,
+  nada acontecia na tela dele — ele continuava usando o painel e só era desconectado ao **atualizar o
+  navegador (F5)**. Motivo: a verificação de quem-é-você rodava **uma única vez** (no
+  `onAuthStateChanged`, ao carregar a página); depois disso nada ficava "ouvindo" o Firestore.
+- **O que mudou:** o painel agora **escuta em tempo real** o próprio documento `admins/{uid}` com
+  **`onSnapshot`** (função `vigiarMinhaConta()`, chamada após carregar o painel). Assim que **outro
+  admin**, com este painel já aberto:
+  - **reinicia a senha** deste usuário (`mustChangePassword` vira `true`), ou
+  - **exclui o acesso** dele (o documento `admins/{uid}` é apagado),
+  o navegador reage **na hora** (poucos segundos, sem F5): mostra um aviso, faz `signOut` e volta para
+  o **login** (`forcarSaida()`). Um flag `saindoForcado` evita disparo duplo.
+- **Aviso no login:** antes de sair, grava a mensagem em `sessionStorage['avisoLogin']`; o `login.js`
+  lê e mostra um **toast** explicando o motivo ("Sua senha foi reiniciada..." / "Seu acesso foi
+  removido...") ao chegar na tela de login.
+- **Regras do Firestore:** **não** precisaram mudar. O `onSnapshot` de um doc usa a mesma permissão de
+  `get` que já existia (linha `allow get: ... request.auth.uid == uid`); como a condição depende só do
+  caminho (não de `resource.data`), a notificação de **exclusão** do doc também é entregue.
+- **Observação:** isso resolve a parte de UX/sessão em tempo real **pelo cliente**. A ressalva antiga
+  continua: `sendPasswordResetEmail` não invalida a senha atual no servidor (só o Admin SDK faria) —
+  mas agora, no mínimo, a sessão ativa é **encerrada imediatamente** e o usuário é forçado ao login.
+- **Status:** concluído (código). Sem mudança nas regras. Pendente: deploy (push → Netlify publica).
+
 ## 2026-07-16 — PONTO DE PARADA (fim da 2ª sessão do dia)
 - **Onde paramos:** todas as mudanças pedidas foram implementadas, commitadas e enviadas ao GitHub
   (`main`, último commit `f0558fd`). Netlify publica automaticamente. Nada pendente de código.

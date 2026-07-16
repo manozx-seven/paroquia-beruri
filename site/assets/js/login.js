@@ -15,6 +15,13 @@ const btnSalvarSenha = document.getElementById('btnSalvarSenha');
 // olho para mostrar/ocultar senha
 olhoSenhaEm(document.getElementById('senha'), novaSenhaEl, novaSenha2El);
 
+// Aviso vindo do painel quando a sessão foi encerrada em tempo real
+// (senha reiniciada ou acesso removido por outro administrador enquanto o painel estava aberto).
+try {
+  const aviso = sessionStorage.getItem('avisoLogin');
+  if (aviso){ toast(aviso, 'warn', 8000); sessionStorage.removeItem('avisoLogin'); }
+} catch (_){}
+
 btnEntrar.addEventListener('click', () => comCarregamento(btnEntrar, entrar));
 document.getElementById('senha').addEventListener('keydown', e => { if (e.key === 'Enter') comCarregamento(btnEntrar, entrar); });
 btnSalvarSenha.addEventListener('click', () => comCarregamento(btnSalvarSenha, salvarSenha));
